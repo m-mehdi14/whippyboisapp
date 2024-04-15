@@ -1,7 +1,15 @@
 /* eslint-disable prettier/prettier */
 import {createUserWithEmailAndPassword} from 'firebase/auth';
 import {app, auth} from './firebaseConfig';
-import {getFirestore, setDoc, doc} from 'firebase/firestore';
+import {
+  getFirestore,
+  setDoc,
+  doc,
+  addDoc,
+  collection,
+} from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import messaging from '@react-native-firebase/messaging';
 // import bcrypt from 'bcryptjs';
 
 // interface RegisterUser {
@@ -35,12 +43,22 @@ export const registerUser = async (
       password,
     );
 
+    let fcmToken = await AsyncStorage.getItem('fcm_Token');
     await setDoc(doc(db, 'users', response?.user?.uid), {
       name: name,
       email: email,
       userId: response?.user?.uid,
       role: role,
+      fcmToken: fcmToken,
     });
+
+    const token = await messaging().getToken();
+    if (token) {
+      await addDoc(collection(db, 'fcmTokens'), {
+        userId: response.user.uid,
+        token: fcmToken,
+      });
+    }
 
     return {
       success: 'User registered successfully!',

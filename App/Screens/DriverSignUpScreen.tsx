@@ -18,6 +18,8 @@ import {registerUser} from '../../hooks/register';
 import {ScrollView} from 'react-native';
 import {StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+import {CommonActions} from '@react-navigation/native';
 
 const DriverSignUpScreen = () => {
   const navigation = useNavigation();
@@ -30,6 +32,11 @@ const DriverSignUpScreen = () => {
   const [showConfirmPassword, setshowConfirmPassword] = useState(false);
   const [isloading, setisloading] = useState(false);
 
+  const resetAction = CommonActions.reset({
+    index: 0,
+    routes: [{name: 'driverlogin'}],
+  });
+
   let matchedPassword = password === confirmPassword;
   const handleSubmitButton = async () => {
     setisloading(true);
@@ -38,8 +45,10 @@ const DriverSignUpScreen = () => {
     if (response.success) {
       // Alert.alert("Sign up", response.success);
       ToastAndroid.show(response?.success, ToastAndroid.SHORT);
+      // const storedUser = await AsyncStorage.getItem('user');
       //@ts-ignore
-      navigation.navigate('driverlogin');
+      // navigation.navigate('driverlogin');
+      navigation.dispatch(resetAction); // using the resetAction defined above
     }
     if (!response.success) {
       Alert.alert('Sign up', response.error);
@@ -82,6 +91,7 @@ const DriverSignUpScreen = () => {
                 placeholder="Email"
                 onChangeText={e => setEmail(e)}
                 value={email}
+                placeholderTextColor={'#000'}
               />
               {/* Name */}
               <TextInput
@@ -89,6 +99,7 @@ const DriverSignUpScreen = () => {
                 placeholder="Name"
                 onChangeText={e => setname(e)}
                 value={name}
+                placeholderTextColor={'#000'}
               />
               {/* Create Password */}
               <TextInput
@@ -97,6 +108,7 @@ const DriverSignUpScreen = () => {
                 secureTextEntry={!showPassword}
                 onChangeText={e => setpassword(e)}
                 value={password}
+                placeholderTextColor={'#000'}
               />
               {/* Re - Enter Password */}
               <TextInput
@@ -105,6 +117,7 @@ const DriverSignUpScreen = () => {
                 secureTextEntry={!showConfirmPassword}
                 onChangeText={e => setconfirmPassword(e)}
                 value={confirmPassword}
+                placeholderTextColor={'#000'}
               />
 
               {/* Show Password Button */}

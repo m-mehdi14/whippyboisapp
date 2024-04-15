@@ -10,6 +10,7 @@ import {auth} from '../../hooks/firebaseConfig';
 import {TouchableOpacity} from 'react-native';
 import {SafeAreaView} from 'react-native';
 import {StyleSheet} from 'react-native';
+import PushNotification from 'react-native-push-notification';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -23,6 +24,25 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error signing out: ', error);
     }
+  };
+
+  const SendNotifications = () => {
+    // PushNotification.cancelAllLocalNotifications();
+    PushNotification.localNotification({
+      channelId: 'test-channel',
+      title: 'Test Notification',
+      message: 'This is a test notification by Pakverse Team',
+    });
+
+    PushNotification.localNotificationSchedule({
+      channelId: 'test-channel',
+      title: 'Alarm',
+      message: 'This is a test notification by Pakverse Team by 5 second ago!',
+      date: new Date(Date.now() + 5 * 1000),
+      allowWhileIdle: true,
+    });
+
+    console.log('Notification Function ----> ');
   };
 
   return (
@@ -56,6 +76,20 @@ export default function ProfileScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* logout Button */}
+      <TouchableOpacity
+        // onPress={() => signOut(auth)}
+        onPress={() => SendNotifications()}
+        style={styles.logoutButton}>
+        <Text
+          style={{
+            color: '#000',
+            fontSize: 17,
+          }}>
+          Send Notifications
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

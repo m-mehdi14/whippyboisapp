@@ -127,6 +127,7 @@ export default function AddProductScreen() {
                 }}
                 value={title}
                 onChangeText={text => setTitle(text)}
+                placeholderTextColor={'#000'}
               />
             </View>
 
@@ -144,6 +145,7 @@ export default function AddProductScreen() {
                 keyboardType="number-pad"
                 value={price}
                 onChangeText={p => setPrice(p)}
+                placeholderTextColor={'#000'}
               />
             </View>
           </View>
@@ -192,6 +194,7 @@ const styles = StyleSheet.create({
     width: 183,
     fontSize: 24,
     fontWeight: '400',
+    color: '#000',
   },
   PhotoMain: {
     width: 301,

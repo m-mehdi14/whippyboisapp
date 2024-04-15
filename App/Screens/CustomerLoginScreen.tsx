@@ -57,6 +57,7 @@ const CustomerLoginScreen = () => {
               placeholder="Enter your Email"
               onChangeText={e => setEmail(e)}
               value={email}
+              placeholderTextColor={'#000'}
             />
             {/* Create Password */}
             <TextInput
@@ -65,6 +66,7 @@ const CustomerLoginScreen = () => {
               secureTextEntry={!showPassword}
               onChangeText={e => setpassword(e)}
               value={password}
+              placeholderTextColor={'#000'}
             />
 
             {/* Show Password Button */}

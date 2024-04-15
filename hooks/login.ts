@@ -6,9 +6,27 @@ import {
   getDocs,
   getFirestore,
   query,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// import PushNotification from 'react-native-push-notification';
+
+// const createChannels = async () => {
+//   PushNotification.createChannel(
+//     {
+//       channelId: 'test-Channel',
+//       channelName: 'Test Channel',
+//     },
+//     created => {
+//       if (created) {
+//         console.log('Channel created successfully');
+//       } else {
+//         console.log('Error creating channel');
+//       }
+//     },
+//   );
+// };
 
 export const loginUser = async (email: string, password: string) => {
   try {
@@ -41,6 +59,7 @@ export const loginUser = async (email: string, password: string) => {
         error: 'User not found!',
       };
     }
+    // await createChannels();
 
     return {
       success: 'User logged in successfully!',
@@ -75,13 +94,25 @@ export const DriverLoginUser = async (email: string, password: string) => {
         error: 'User not found in Firestore',
       };
     }
-
+    const userDocRef = querySnapshot.docs[0].ref;
     const response = await signInWithEmailAndPassword(auth, email, password);
 
     if (!response.user) {
       return {
         error: 'User not found!',
       };
+    }
+
+    // Retrieve the FCM token from AsyncStorage
+    let fcmToken = await AsyncStorage.getItem('fcm_Token');
+    if (fcmToken) {
+      // Update the Firestore document with the FCM token
+      await updateDoc(userDocRef, {
+        fcmToken: fcmToken,
+      });
+      console.log('FCM token updated in Firestore successfully.');
+    } else {
+      console.log('No FCM token available to store in Firestore.');
     }
 
     // Store user data in AsyncStorage

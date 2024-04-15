@@ -81,6 +81,7 @@ const CustomerSignUpScreen = () => {
                 placeholder="Email"
                 onChangeText={e => setEmail(e)}
                 value={email}
+                placeholderTextColor={'#000'}
               />
               {/* Name */}
               <TextInput
@@ -88,6 +89,7 @@ const CustomerSignUpScreen = () => {
                 placeholder="Name"
                 onChangeText={e => setname(e)}
                 value={name}
+                placeholderTextColor={'#000'}
               />
               {/* Create Password */}
               <TextInput
@@ -96,6 +98,7 @@ const CustomerSignUpScreen = () => {
                 secureTextEntry={!showPassword}
                 onChangeText={e => setpassword(e)}
                 value={password}
+                placeholderTextColor={'#000'}
               />
               {/* Re - Enter Password */}
               <TextInput
@@ -104,6 +107,7 @@ const CustomerSignUpScreen = () => {
                 secureTextEntry={!showConfirmPassword}
                 onChangeText={e => setconfirmPassword(e)}
                 value={confirmPassword}
+                placeholderTextColor={'#000'}
               />
 
               {/* Show Password Button */}

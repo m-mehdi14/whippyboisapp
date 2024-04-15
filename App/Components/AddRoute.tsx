@@ -6,12 +6,15 @@ import {useIsFocused, useNavigation} from '@react-navigation/native';
 
 interface AddRouteProps {
   getData: (data: any) => void;
+  cords?: any;
 }
 
-const AddRoute = ({getData}: AddRouteProps) => {
+const AddRoute = ({getData, cords}: AddRouteProps) => {
   const isFocused = useIsFocused();
   // const insets = useSafeAreaInsets();
   const nav = useNavigation();
+
+  console.log('Cords Boolean', cords);
 
   useEffect(() => {
     if (isFocused) {
@@ -26,43 +29,67 @@ const AddRoute = ({getData}: AddRouteProps) => {
     });
   };
 
+  // Function for Change route
+  const onPressChangeRoute = () => {
+    //@ts-ignore
+    nav.navigate('changeRoute', {
+      getCordinates: fetchValues,
+    });
+  };
+
   const fetchValues = (data: any) => {
     console.log('Data ---> ', data);
     // Send coordinates to Map Screen.
     getData(data);
   };
   return (
-    // <TouchableOpacity
-    //   style={styles.container}
-    //   //@ts-ignore
-    //   onPress={onPressLocation}
-    // >
-    //   <View style={styles.content}>
-    //     <Text>Where are you going ?</Text>
-    //     <Ionicons name="search" size={24} color="black" />
-    //   </View>
-    // </TouchableOpacity>
-    <TouchableOpacity
-      style={{
-        backgroundColor: '#FF0000',
-        height: 45,
-        width: 116,
-        // left: 150,
-        // top: 90,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 15,
-        marginTop: 40,
-      }}
-      onPress={onPressLocation}>
-      <Text
-        style={{
-          color: '#fff',
-          fontSize: 16,
-        }}>
-        Set Marker
-      </Text>
-    </TouchableOpacity>
+    <>
+      {cords ? (
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#FF0000',
+            height: 45,
+            width: 116,
+            // left: 150,
+            // top: 90,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 15,
+            marginTop: 40,
+          }}
+          onPress={onPressChangeRoute}>
+          <Text
+            style={{
+              color: '#fff',
+              fontSize: 16,
+            }}>
+            Change Route
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#FF0000',
+            height: 45,
+            width: 116,
+            // left: 150,
+            // top: 90,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 15,
+            marginTop: 40,
+          }}
+          onPress={onPressLocation}>
+          <Text
+            style={{
+              color: '#fff',
+              fontSize: 16,
+            }}>
+            Set Marker
+          </Text>
+        </TouchableOpacity>
+      )}
+    </>
   );
 };
 

@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import Geolocation from '@react-native-community/geolocation';
@@ -19,6 +20,13 @@ import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/Feather';
 import {Picker} from '@react-native-picker/picker';
 import AddRoute from '../Components/AddRoute';
+import {
+  deleteRoutesByDriverId,
+  getDriverRouteData,
+} from '../../hooks/RouteFunctions';
+import messaging from '@react-native-firebase/messaging';
+import {getAllRouteAcceptRequests} from '../../hooks/RideAccept';
+import {SendNotifyDriverArrive} from '../../hooks/notificationService';
 
 export default function MapScreen() {
   const [userLocation, setUserLocation] = useState<any>(null);
@@ -29,14 +37,95 @@ export default function MapScreen() {
     dropCords: null,
   });
   const [selectedLanguage, setSelectedLanguage] = useState();
+  const [routeRequests, setRouteRequests] = useState([]);
+  const [routesData, setRoutesData] = useState([]);
   const mapRef = useRef(null);
-  // console.log(location);
+  console.log(location);
+  console.log('Pickup Coordinates:', cords.pickupCords);
+  console.log('Dropoff Coordinates:', cords.dropCords);
 
   useEffect(() => {
     // notificationButton();
     requestLocationPermission(); // Request location permissions
+    fetchAllRouteRequests();
+    watchUserLocation();
     setModalVisible(false);
   }, []);
+
+  useEffect(() => {
+    const fetchDriverRouteData = async () => {
+      try {
+        const token = await messaging().getToken();
+        const routes = await getDriverRouteData(token);
+        setRoutesData(routes); // Store fetched routes in state
+        if (routes.length > 0) {
+          // Assuming the latest route is the one we want
+          const latestRoute = routes[routes.length - 1];
+          setCords({
+            pickupCords: {
+              latitude: latestRoute.pickUpCords.latitude,
+              longitude: latestRoute.pickUpCords.longitude,
+            },
+            dropCords: {
+              latitude: latestRoute.DestinationCords.latitude,
+              longitude: latestRoute.DestinationCords.longitude,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching driver route data:', error);
+      }
+    };
+
+    fetchDriverRouteData();
+  }, []);
+
+  useEffect(() => {
+    if (userLocation && cords.dropCords && routesData.length > 0) {
+      const distance = getDistance(userLocation, cords.dropCords);
+      if (distance < 50) {
+        // Threshold in meters
+        routesData.forEach((route: any) => {
+          deleteRoutesByDriverId(route.driverId)
+            .then(() => {
+              console.log(
+                'Routes successfully deleted due to proximity for driver ID:',
+                route.driverId,
+              );
+            })
+            .catch(error => {
+              console.error(
+                'Failed to delete routes for driver ID:',
+                route.driverId,
+                error,
+              );
+            });
+        });
+      }
+    }
+  }, [userLocation, cords.dropCords, routesData]);
+
+  const fetchAllRouteRequests = async () => {
+    const requests = await getAllRouteAcceptRequests();
+    setRouteRequests(requests); // Store fetched data
+  };
+
+  // useEffect(() => {
+  //   const triggerNotification = async () => {
+  //     if (cords.pickupCords && cords.dropCords) {
+  //       const notificationData = {
+  //         token:
+  //           'cG1FWDU4ROqpMlIvCYj6Uv:APA91bFtOs9M2uemgy6_DaeIMnjaf2Wk665BuFryDFH4PjoZ4-BHWz7xY_jbLeKyiJKpOs6YGvtdps73WWMygYwgbBsIywYNBOXP4k6CjO5ibBC1s5nNKtNj1Gqv49Ruvs6_hX70wKxN',
+  //         title: 'Route Planned',
+  //         body: 'Your route has been set. Tap to view details!',
+  //         navigationId: 'notification',
+  //       };
+  //       await sendNotification(notificationData);
+  //     }
+  //   };
+
+  //   triggerNotification();
+  // }, [cords]); // Dependency array includes 'cords' to re-run effect when cords change
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
@@ -82,13 +171,13 @@ export default function MapScreen() {
         console.log(position?.coords);
         setUserLocation(position?.coords);
         setLocation(position); // Update location state
-        setCords(prevCords => ({
-          ...prevCords,
-          pickupCords: {
-            latitude: position?.coords?.latitude,
-            longitude: position?.coords?.longitude,
-          },
-        }));
+        // setCords(prevCords => ({
+        //   ...prevCords,
+        //   pickupCords: {
+        //     latitude: position?.coords?.latitude,
+        //     longitude: position?.coords?.longitude,
+        //   },
+        // }));
       },
       error => {
         // See error code charts below.
@@ -113,6 +202,65 @@ export default function MapScreen() {
         longitude: data?.DestinationCords?.longitude,
       },
     });
+  };
+
+  const watchUserLocation = () => {
+    Geolocation.watchPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        setUserLocation({latitude, longitude});
+        checkProximity({latitude, longitude});
+      },
+      error => {
+        console.log(error.code, error.message);
+      },
+      {enableHighAccuracy: true, distanceFilter: 10},
+    );
+  };
+
+  const checkProximity = (currentLocation: any) => {
+    routeRequests.forEach((request): any => {
+      const distance = getDistance(
+        {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        },
+        {
+          latitude: request?.location.latitude,
+          longitude: request?.location.longitude,
+        },
+      );
+
+      if (distance < 50) {
+        // Threshold in meters
+        SendNotifyDriverArrive(request?.driverId)
+          .then(() => {
+            console.log('Notification sent to driver at location.');
+          })
+          .catch(error => {
+            console.error('Error sending notification:', error);
+          });
+      }
+    });
+  };
+
+  // Helper function to calculate distance between two coordinates
+  const getDistance = (loc1: any, loc2: any) => {
+    const radlat1 = (Math.PI * loc1.latitude) / 180;
+    const radlat2 = (Math.PI * loc2.latitude) / 180;
+    const theta = loc1.longitude - loc2.longitude;
+    const radtheta = (Math.PI * theta) / 180;
+    let dist =
+      Math.sin(radlat1) * Math.sin(radlat2) +
+      Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+    if (dist > 1) {
+      dist = 1;
+    }
+    dist = Math.acos(dist);
+    dist = (dist * 180) / Math.PI;
+    dist = dist * 60 * 1.1515;
+    dist = dist * 1.609344 * 1000; // Meters
+    return dist;
   };
 
   if (!userLocation) {
@@ -169,6 +317,25 @@ export default function MapScreen() {
               longitudeDelta: 0.0421,
             }}
             showsUserLocation={true}>
+            {routeRequests?.map((request: any) => (
+              <>
+                <Marker
+                  key={request?.id}
+                  coordinate={{
+                    latitude: request?.location.latitude,
+                    longitude: request?.location.longitude,
+                  }}
+                  title={`Request from ${request?.name}`}
+                />
+                <Circle
+                  center={{
+                    latitude: request?.location.latitude,
+                    longitude: request?.location.longitude,
+                  }}
+                  radius={100}
+                />
+              </>
+            ))}
             {cords?.pickupCords && (
               <>
                 <Marker
@@ -187,24 +354,33 @@ export default function MapScreen() {
                 image={ImagePath?.isGreenMarker}
               />
             )}
-            <MapViewDirections
-              origin={cords?.pickupCords}
-              destination={cords?.dropCords}
-              strokeWidth={3}
-              strokeColor="blue"
-              apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
-              optimizeWaypoints={true}
-              onReady={result => {
-                mapRef?.current?.fitToCoordinates(result.coordinates, {
-                  edgePadding: {
-                    right: 30,
-                    bottom: 300,
-                    left: 30,
-                    top: 100,
-                  },
-                });
-              }}
-            />
+            {cords?.pickupCords && cords?.dropCords && (
+              <>
+                <MapViewDirections
+                  origin={cords?.pickupCords}
+                  destination={cords?.dropCords}
+                  strokeWidth={3}
+                  strokeColor="blue"
+                  apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
+                  optimizeWaypoints={true}
+                  onReady={result => {
+                    if (cords.pickupCords && cords.dropCords) {
+                      mapRef?.current?.fitToCoordinates(result.coordinates, {
+                        edgePadding: {
+                          right: 30,
+                          bottom: 300,
+                          left: 30,
+                          top: 100,
+                        },
+                      });
+                    }
+                  }}
+                  onError={errorMessage => {
+                    console.log('GMAPS route request error:', errorMessage);
+                  }}
+                />
+              </>
+            )}
           </MapView>
         </>
       )}
@@ -277,7 +453,10 @@ export default function MapScreen() {
                 </View>
               </View>
 
-              <AddRoute getData={getCordinatesFromUser} />
+              <AddRoute
+                getData={getCordinatesFromUser}
+                cords={cords.dropCords}
+              />
             </View>
           </View>
         </Modal>

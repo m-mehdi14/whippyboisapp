@@ -55,6 +55,7 @@ const DriverloginScreen = () => {
               placeholder="Enter your Email"
               onChangeText={e => setEmail(e)}
               value={email}
+              placeholderTextColor={'#000'}
             />
             {/* Create Password */}
             <TextInput
@@ -63,6 +64,7 @@ const DriverloginScreen = () => {
               secureTextEntry={!showPassword}
               onChangeText={e => setpassword(e)}
               value={password}
+              placeholderTextColor={'#000'}
             />
 
             {/* Show Password Button */}

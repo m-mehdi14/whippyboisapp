@@ -1,15 +1,17 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
-import {View, ScrollView, StyleSheet} from 'react-native';
+
+import {View, ScrollView} from 'react-native';
 import React, {useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
 import SearchBar from '../Components/SearchBar';
 import CustomButton from '../Components/CustomButton';
-import {getAllFcmTokens} from '../../hooks/notificationService';
+import {StyleSheet} from 'react-native';
+import {ChangeRouteNotify} from '../../hooks/notificationService';
+import {saveCoordinatesToFirebase} from '../../hooks/RouteFunctions';
 import {getGeocode} from '../../hooks/getLocationName';
-import {ChooseLocationSaveCords} from '../../hooks/RouteFunctions';
+import {useNavigation} from '@react-navigation/native';
 
-export default function ChooseLocation(props: any) {
+export default function ChangeRouteScreen(props: any) {
   const navigation = useNavigation();
   const [state, setState] = useState<any>({
     pickUpCords: {},
@@ -84,14 +86,14 @@ export default function ChooseLocation(props: any) {
         setState(updatedState);
 
         // Save the coordinates to Firebase
-        await ChooseLocationSaveCords(pickUpCords, DestinationCords);
+        await saveCoordinatesToFirebase(pickUpCords, DestinationCords);
 
         // After notification is sent successfully, pass the coordinates back
         props.route.params.getCordinates(updatedState);
         // Navigate back to the previous screen
         navigation.goBack();
         // Now send the notification with the addresses
-        await getAllFcmTokens(pickUpAddress, dropAddress);
+        await ChangeRouteNotify(pickUpAddress, dropAddress);
         console.log('Notification sent with pick up and drop off addresses.');
       } catch (error) {
         console.error('Error during the search process:', error);
