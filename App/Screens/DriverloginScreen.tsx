@@ -15,6 +15,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {TouchableOpacity} from 'react-native';
 import {DriverLoginUser} from '../../hooks/login';
+import {sendEmailNotification} from '../../hooks/mail';
 
 const DriverloginScreen = () => {
   const navigation = useNavigation();
@@ -28,11 +29,26 @@ const DriverloginScreen = () => {
     setisloading(true);
     let response = await DriverLoginUser(email, password);
     setisloading(false);
-    if (response.success) {
-      //   Alert.alert("Login Successful");
-      //@ts-ignore
-      navigation.navigate('home');
+    // if (response.verify) {
+    //   //@ts-ignore
+    //   navigation.navigate('driverPendingScreen');
+    // }
+    if (response.verify) {
+      // Send email notification
+      sendEmailNotification(email)
+        .then(() => {
+          //@ts-ignore
+          navigation.navigate('driverPendingScreen');
+        })
+        .catch(error => {
+          console.error('Failed to send email after verification:', error);
+        });
     }
+    // if (response.success) {
+    //   //   Alert.alert("Login Successful");
+    //   //@ts-ignore
+    //   navigation.navigate('home');
+    // }
     if (!response.success) {
       Alert.alert('Sign up', response.error);
     }

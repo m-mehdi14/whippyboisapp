@@ -10,6 +10,7 @@ import DriverSignUpScreen from '../Screens/DriverSignUpScreen';
 import CustomerLoginScreen from '../Screens/CustomerLoginScreen';
 import DriverloginScreen from '../Screens/DriverloginScreen';
 import DriverDetailScreen from '../Screens/DriverDetailScreen';
+import DriverPendingScreen from '../Screens/driver-pending-screen';
 
 const Stack = createStackNavigator();
 const SplashScreenStackNav = () => {
@@ -49,6 +50,11 @@ const SplashScreenStackNav = () => {
         <Stack.Screen
           name="driverdetailScreen"
           component={DriverDetailScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="driverPendingScreen"
+          component={DriverPendingScreen}
           options={{headerShown: false}}
         />
       </Stack.Navigator>

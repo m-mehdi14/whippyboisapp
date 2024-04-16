@@ -50,6 +50,7 @@ export const registerUser = async (
       userId: response?.user?.uid,
       role: role,
       fcmToken: fcmToken,
+      accountVerify: 'PENDING',
     });
 
     const token = await messaging().getToken();

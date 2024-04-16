@@ -29,7 +29,14 @@ import {getAllRouteAcceptRequests} from '../../hooks/RideAccept';
 import {SendNotifyDriverArrive} from '../../hooks/notificationService';
 
 export default function MapScreen() {
-  const [userLocation, setUserLocation] = useState<any>(null);
+  // Set a default location (e.g., New York City)
+  const defaultLocation = {
+    latitude: 40.7128,
+    longitude: -74.006,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  };
+  const [userLocation, setUserLocation] = useState<any>(defaultLocation);
   const [location, setLocation] = useState<any>(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [cords, setCords] = useState({
@@ -41,8 +48,8 @@ export default function MapScreen() {
   const [routesData, setRoutesData] = useState([]);
   const mapRef = useRef(null);
   console.log(location);
-  console.log('Pickup Coordinates:', cords.pickupCords);
-  console.log('Dropoff Coordinates:', cords.dropCords);
+  // console.log('Pickup Coordinates:', cords.pickupCords);
+  // console.log('Dropoff Coordinates:', cords.dropCords);
 
   useEffect(() => {
     // notificationButton();
@@ -304,86 +311,81 @@ export default function MapScreen() {
           />
         </TouchableOpacity>
       </View>
-      {userLocation && (
-        <>
-          {/* <AddRoute getData={getCordinatesFromUser} /> */}
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            initialRegion={{
-              latitude: userLocation?.latitude,
-              longitude: userLocation?.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-            showsUserLocation={true}>
-            {routeRequests?.map((request: any) => (
-              <>
-                <Marker
-                  key={request?.id}
-                  coordinate={{
-                    latitude: request?.location.latitude,
-                    longitude: request?.location.longitude,
-                  }}
-                  title={`Request from ${request?.name}`}
-                />
-                <Circle
-                  center={{
-                    latitude: request?.location.latitude,
-                    longitude: request?.location.longitude,
-                  }}
-                  radius={100}
-                />
-              </>
-            ))}
-            {cords?.pickupCords && (
-              <>
-                <Marker
-                  coordinate={cords?.pickupCords}
-                  title="Your Location"
-                  description="This is your current location"
-                  image={ImagePath?.isCurrentLoc}
-                />
-                <Circle center={cords?.pickupCords} radius={100} />
-              </>
-            )}
-            {cords?.dropCords && (
-              <Marker
-                coordinate={cords?.dropCords}
-                title="Drop Location"
-                image={ImagePath?.isGreenMarker}
-              />
-            )}
-            {cords?.pickupCords && cords?.dropCords && (
-              <>
-                <MapViewDirections
-                  origin={cords?.pickupCords}
-                  destination={cords?.dropCords}
-                  strokeWidth={3}
-                  strokeColor="blue"
-                  apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
-                  optimizeWaypoints={true}
-                  onReady={result => {
-                    if (cords.pickupCords && cords.dropCords) {
-                      mapRef?.current?.fitToCoordinates(result.coordinates, {
-                        edgePadding: {
-                          right: 30,
-                          bottom: 300,
-                          left: 30,
-                          top: 100,
-                        },
-                      });
-                    }
-                  }}
-                  onError={errorMessage => {
-                    console.log('GMAPS route request error:', errorMessage);
-                  }}
-                />
-              </>
-            )}
-          </MapView>
-        </>
-      )}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: userLocation?.latitude,
+          longitude: userLocation?.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+        showsUserLocation={true}>
+        {routeRequests?.map((request: any) => (
+          <>
+            <Marker
+              key={request?.id}
+              coordinate={{
+                latitude: request?.location.latitude,
+                longitude: request?.location.longitude,
+              }}
+              title={`Request from ${request?.name}`}
+            />
+            <Circle
+              center={{
+                latitude: request?.location.latitude,
+                longitude: request?.location.longitude,
+              }}
+              radius={100}
+            />
+          </>
+        ))}
+        {cords?.pickupCords && (
+          <>
+            <Marker
+              coordinate={cords?.pickupCords}
+              title="Your Location"
+              description="This is your current location"
+              image={ImagePath?.isCurrentLoc}
+            />
+            <Circle center={cords?.pickupCords} radius={100} />
+          </>
+        )}
+        {cords?.dropCords && (
+          <Marker
+            coordinate={cords?.dropCords}
+            title="Drop Location"
+            image={ImagePath?.isGreenMarker}
+          />
+        )}
+        {cords?.pickupCords && cords?.dropCords && (
+          <>
+            <MapViewDirections
+              origin={cords?.pickupCords}
+              destination={cords?.dropCords}
+              strokeWidth={3}
+              strokeColor="blue"
+              apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
+              optimizeWaypoints={true}
+              onReady={result => {
+                if (cords.pickupCords && cords.dropCords) {
+                  mapRef?.current?.fitToCoordinates(result.coordinates, {
+                    edgePadding: {
+                      right: 30,
+                      bottom: 300,
+                      left: 30,
+                      top: 100,
+                    },
+                  });
+                }
+              }}
+              onError={errorMessage => {
+                console.log('GMAPS route request error:', errorMessage);
+              }}
+            />
+          </>
+        )}
+      </MapView>
 
       <View style={styles.flexView}>
         {/* <View>

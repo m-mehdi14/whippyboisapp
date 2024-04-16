@@ -94,8 +94,19 @@ export const DriverLoginUser = async (email: string, password: string) => {
         error: 'User not found in Firestore',
       };
     }
+
+    if (userData.accountVerify === 'PENDING') {
+      return {
+        error: 'User not verified!',
+        verify: 'User not verified!',
+      };
+    }
     const userDocRef = querySnapshot.docs[0].ref;
-    const response = await signInWithEmailAndPassword(auth, email, password);
+    const response: any = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
 
     if (!response.user) {
       return {

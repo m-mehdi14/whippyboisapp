@@ -1,12 +1,23 @@
 /* eslint-disable prettier/prettier */
 const admin = require('firebase-admin');
 const express = require('express');
+const nodemailer = require('nodemailer');
 const app = express();
 
 var serviceAccount = require('./serviceAccount.json');
 app.use(express.json());
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
+});
+
+const transporter = nodemailer.createTransport({
+  port: 465, // true for 465, false for other ports
+  host: 'smtp.gmail.com',
+  auth: {
+    user: 'mehdim93514@gmail.com',
+    pass: 'duzgebxzrjimnqbe',
+  },
+  secure: true,
 });
 
 app.get('/', (req, res) => {
@@ -90,6 +101,28 @@ app.post('/driver-arrive', (req, res) => {
       console.error('Unable to Send Notification', err);
       res.status(500).send({success: false, error: err});
     });
+});
+
+app.post('/send-email', (req, res) => {
+  console.log('Send Email body --->', req.body);
+  const {email} = req.body;
+  const mailData = {
+    from: `${email}`,
+    to: 'pakverseorg@gmail.com',
+    subject: 'New Driver Registered in your Whippy Bois App!',
+    text: 'New Driver Registered in your Whippy Bois App!',
+    html: '<h2> New Driver Approval , please check the Whippy Bois Admin Panel !</h2>',
+  };
+
+  transporter.sendMail(mailData, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    res.status(200).send({
+      message: 'Mail Send',
+      message_id: info.messageId,
+    });
+  });
 });
 
 app.listen(3000, () => {

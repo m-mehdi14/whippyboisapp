@@ -49,11 +49,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   textInput: {
-    // backgroundColor: '#747474',
-    backgroundColor: 'white',
+    backgroundColor: '#E4E4E4',
+    // backgroundColor: 'white',
     color: '#000',
     fontSize: 17,
     shadowColor: 'black',
     shadowOffset: {width: 0, height: 2},
+    height: 60,
   },
 });

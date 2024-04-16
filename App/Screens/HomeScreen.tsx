@@ -103,6 +103,7 @@ export default function HomeScreen({navigation}: any) {
           <TextInput
             placeholder="Search Your Icecream"
             style={{color: 'black', fontSize: 16}}
+            placeholderTextColor={'#000'}
           />
           <Icon
             style={{
@@ -141,8 +142,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     padding: 10,
     borderRadius: 10,
-    // backgroundColor: '#EBEBEB',
-    backgroundColor: 'white',
+    backgroundColor: '#EBEBEB',
+    // backgroundColor: 'white',
     width: '65%',
     color: '#000',
   },
