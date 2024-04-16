@@ -1,130 +1,129 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 
-import {View, Text, SafeAreaView} from 'react-native';
-import React from 'react';
+import {View, Text, SafeAreaView, FlatList, ScrollView} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {StyleSheet} from 'react-native';
+import {getBookingsDetails} from '../../hooks/getBookingsDetails';
 
 export default function DrvierPostScreen() {
   const insets = useSafeAreaInsets();
-  return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        {
-          paddingTop: insets.top,
-        },
-      ]}>
-      <View style={styles.content}>
-        <Text style={styles.headingText}>Whippy Bois</Text>
-        <Text style={styles.subHeading}>Bookings</Text>
-        {/* Driver booking screen */}
-        <View
-          style={{
-            // backgroundColor: '#F2C7C7',
-            // backgroundColor: '#FF2D00',
-            // backgroundColor: 'rgba(255, 45, 0, 0.66)', // 50% opacity
-            backgroundColor: '#FFC300',
-            height: 343,
-            width: 344,
-            borderRadius: 15,
-            marginTop: 19,
-            alignItems: 'flex-start',
-            padding: 25,
-          }}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: '500',
-              color: '#000',
-            }}>
-            Booking#1
-          </Text>
-          {/* Name */}
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '400',
-              marginTop: 25,
-              color: '#000',
-            }}>
-            John Alison
-          </Text>
-          {/* Date and Time */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop: 25,
-            }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '400',
-                color: '#000',
-              }}>
-              Date
-            </Text>
-            <Text
-              style={{
-                marginLeft: 110,
-                fontSize: 18,
-                fontWeight: '400',
-                color: '#000',
-                marginTop: 0,
-              }}>
-              Time
-            </Text>
-          </View>
+  const [booking, setBooking] = useState([]);
+  console.log('Booking Details Fetched ---> ', booking);
 
-          {/* Number */}
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '400',
-              color: '#000',
-              marginTop: 25,
-            }}>
-            Number :
-          </Text>
-          {/* Address */}
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '400',
-              color: '#000',
-              marginTop: 25,
-            }}>
-            Address :
-          </Text>
-        </View>
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getBookingsDetails();
+      setBooking(res);
+    };
+
+    fetchData();
+  }, []);
+
+  const renderItem = ({item}: any) => (
+    <View style={styles.bookingContainer}>
+      <Text style={styles.bookingHeading}>Booking</Text>
+      <View style={styles.bookingDetails}>
+        <Text style={styles.bookingDetailText}>Name: {item.name}</Text>
+        <Text style={styles.bookingDetailText}>
+          Date: {item.booking.date.toDate().toDateString()}
+        </Text>
+        <Text style={styles.bookingDetailText}>
+          Time: {item.booking.date.toDate().toLocaleTimeString()}
+        </Text>
+        <Text style={styles.bookingDetailText}>
+          Number: {item.booking.number}
+        </Text>
+        <Text style={styles.bookingDetailText}>
+          Address: {item.booking.address}
+        </Text>
       </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
+      <ScrollView style={{flex: 1, width: '100%'}}>
+        <View style={styles.content}>
+          <View style={{width: '100%', alignItems: 'center'}}>
+            <Text style={styles.headingText}>Whippy Bois</Text>
+            <Text style={styles.subHeading}>Bookings</Text>
+          </View>
+          {booking?.length === 0 ? (
+            <Text style={styles.noBookingText}>No booking available</Text>
+          ) : (
+            <FlatList
+              data={booking}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
+              contentContainerStyle={styles.flatListContent}
+            />
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: '#E4E4E4',
-    backgroundColor: '#ffffff',
     flex: 1,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
+    width: '100%',
   },
   content: {
     flex: 1,
     marginTop: 35,
-    alignItems: 'center',
+    // alignItems: 'center',
+    width: '100%',
   },
   headingText: {
     fontSize: 30,
     fontWeight: '600',
     color: '#000',
+    alignItems: 'center',
   },
   subHeading: {
     fontSize: 16,
     fontWeight: '500',
     marginTop: 20,
     color: '#000',
+    alignItems: 'center',
+  },
+  bookingContainer: {
+    backgroundColor: '#FFC300',
+    borderRadius: 15,
+    marginVertical: 15,
+    padding: 15,
+    width: '100%', // Set width to full
+  },
+  bookingHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#000',
+  },
+  bookingDetails: {
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 10,
+  },
+  bookingDetailText: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#000',
+  },
+  flatListContent: {
+    paddingHorizontal: 20, // Add horizontal padding for better spacing
+    width: '100%',
+  },
+  noBookingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

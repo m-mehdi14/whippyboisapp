@@ -18,8 +18,9 @@ import {registerUser} from '../../hooks/register';
 import {ScrollView} from 'react-native';
 import {StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {signOut} from 'firebase/auth';
+import {auth} from '../../hooks/firebaseConfig';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
-import {CommonActions} from '@react-navigation/native';
 
 const DriverSignUpScreen = () => {
   const navigation = useNavigation();
@@ -32,11 +33,6 @@ const DriverSignUpScreen = () => {
   const [showConfirmPassword, setshowConfirmPassword] = useState(false);
   const [isloading, setisloading] = useState(false);
 
-  const resetAction = CommonActions.reset({
-    index: 0,
-    routes: [{name: 'driverlogin'}],
-  });
-
   let matchedPassword = password === confirmPassword;
   const handleSubmitButton = async () => {
     setisloading(true);
@@ -45,10 +41,9 @@ const DriverSignUpScreen = () => {
     if (response.success) {
       // Alert.alert("Sign up", response.success);
       ToastAndroid.show(response?.success, ToastAndroid.SHORT);
-      // const storedUser = await AsyncStorage.getItem('user');
+      await signOut(auth);
       //@ts-ignore
-      // navigation.navigate('driverlogin');
-      navigation.dispatch(resetAction); // using the resetAction defined above
+      navigation.navigate('driverlogin');
     }
     if (!response.success) {
       Alert.alert('Sign up', response.error);

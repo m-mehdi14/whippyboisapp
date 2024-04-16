@@ -1,15 +1,12 @@
 /* eslint-disable prettier/prettier */
-
-'use server';
-
 import {collection, getDocs, getFirestore} from 'firebase/firestore';
 import {app} from './firebaseConfig';
 
-export const getProducts = async () => {
+export const getBookingsDetails = async () => {
   try {
     const db = getFirestore(app);
-    const productsCollection = collection(db, 'productImage');
-    const productsSnapshot = await getDocs(productsCollection);
+    const bookingCollection = collection(db, 'booking');
+    const productsSnapshot = await getDocs(bookingCollection);
 
     const products: any = [];
     productsSnapshot.forEach(doc => {
@@ -18,7 +15,6 @@ export const getProducts = async () => {
 
     return products;
   } catch (error) {
-    console.error('Error getting products:', error);
-    // throw error;
+    console.error('Error in getting booking Details !', error);
   }
 };

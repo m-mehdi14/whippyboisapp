@@ -17,6 +17,8 @@ import {useNavigation} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {registerUser} from '../../hooks/register';
+import {signOut} from 'firebase/auth';
+import {auth} from '../../hooks/firebaseConfig';
 
 const CustomerSignUpScreen = () => {
   const navigation = useNavigation();
@@ -37,6 +39,7 @@ const CustomerSignUpScreen = () => {
     if (response.success) {
       // Alert.alert("Sign up", response.success);
       ToastAndroid.show(response?.success, ToastAndroid.SHORT);
+      await signOut(auth);
       //@ts-ignore
       navigation.navigate('customerlogin');
     }
