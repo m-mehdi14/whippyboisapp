@@ -17,6 +17,8 @@ export default function HomeScreen({navigation}: any) {
   const [role, setrole] = useState('');
   const currentUser: any = useCurrentUser();
   const [data, setdata] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     if (currentUser && currentUser.user) {
@@ -33,6 +35,13 @@ export default function HomeScreen({navigation}: any) {
       // Any cleanup code can go here
     };
   }, []);
+
+  useEffect(() => {
+    const filteredProducts = data.filter(product => {
+      return product.titleValue.toLowerCase().includes(search.toLowerCase());
+    });
+    setFilteredData(filteredProducts);
+  }, [search, data]);
 
   const fetchData = async () => {
     try {
@@ -104,6 +113,8 @@ export default function HomeScreen({navigation}: any) {
             placeholder="Search Your Icecream"
             style={{color: 'black', fontSize: 16}}
             placeholderTextColor={'#000'}
+            onChangeText={setSearch}
+            value={search}
           />
           <Icon
             style={{
@@ -125,7 +136,8 @@ export default function HomeScreen({navigation}: any) {
         <DiscoverIceCream data={data} />
 
         {/* Latest Product */}
-        <LatestProducts data={data} />
+        {/* <LatestProducts data={data} /> */}
+        <LatestProducts data={filteredData.length > 0 ? filteredData : data} />
       </ScrollView>
     </SafeAreaView>
   );

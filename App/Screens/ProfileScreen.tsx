@@ -42,6 +42,50 @@ export default function ProfileScreen() {
           <Text style={styles.value}>{user.user?.name}</Text>
         </View>
 
+        <View
+          style={{
+            marginTop: 20,
+            backgroundColor: '#E0E0E0',
+            padding: 15,
+            width: '100%',
+            borderRadius: 10,
+          }}>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '600',
+              color: '#000',
+            }}>
+            Code by Whippy bois
+          </Text>
+          {user.user?.generateCode ? (
+            <Text
+              style={{
+                marginTop: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                marginLeft: 68,
+                fontSize: 15,
+                fontWeight: '800',
+              }}>
+              {user.user?.generateCode?.code}
+            </Text>
+          ) : (
+            <Text
+              style={{
+                marginTop: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                marginLeft: 25,
+                fontSize: 15,
+              }}>
+              No code available
+            </Text>
+          )}
+        </View>
+
         {/* logout Button */}
         <TouchableOpacity
           // onPress={() => signOut(auth)}

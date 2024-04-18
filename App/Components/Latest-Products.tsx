@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import {FlatList, Image, StyleSheet, View} from 'react-native';
+/* eslint-disable react-native/no-inline-styles */
+import {FlatList, Image, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 
 const LatestProducts = ({data}: any) => {
@@ -13,6 +14,15 @@ const LatestProducts = ({data}: any) => {
         renderItem={({item}) => (
           <View style={styles.itemContainer}>
             <Image source={{uri: item?.imageValue}} style={styles.image} />
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: 'bold',
+                color: 'black',
+                marginTop: 4,
+              }}>
+              {item?.titleValue}
+            </Text>
           </View>
         )}
       />
@@ -27,6 +37,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 10,
     marginTop: 20,
+    marginBottom: 110,
   },
   itemContainer: {
     flex: 1,

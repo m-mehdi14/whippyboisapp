@@ -131,7 +131,7 @@ export default function AddProductScreen() {
               />
             </View>
 
-            <View>
+            {/* <View>
               <TextInput
                 placeholder="Product Price"
                 style={{
@@ -147,7 +147,7 @@ export default function AddProductScreen() {
                 onChangeText={p => setPrice(p)}
                 placeholderTextColor={'#000'}
               />
-            </View>
+            </View> */}
           </View>
           {/* Title and Price */}
           {image && (

@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   getFirestore,
   collection,
@@ -75,16 +76,16 @@ export const ChooseLocationSaveCords = async (
   }
 };
 
-export const getDriverRouteData = async (driverId: string) => {
+export const getDriverRouteData = async (driverId?: string) => {
   const db = getFirestore(app);
   const coordsCollection = collection(db, 'DriverRouteCoordinates'); // Use your collection name
-  const driverRoutesQuery = query(
-    coordsCollection,
-    where('driverId', '==', driverId),
-  );
+  // const driverRoutesQuery = query(
+  //   coordsCollection,
+  //   where('driverId', '==', driverId),
+  // );
 
   try {
-    const querySnapshot = await getDocs(driverRoutesQuery);
+    const querySnapshot = await getDocs(coordsCollection);
     let routes: any = [];
     querySnapshot.forEach(doc => {
       // Construct an array of route data objects
