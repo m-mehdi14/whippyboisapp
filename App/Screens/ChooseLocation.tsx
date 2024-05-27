@@ -111,6 +111,7 @@ export default function ChooseLocation(props: any) {
         width: '100%',
         // marginTop: 20,
         backgroundColor: '#ffffff',
+        // backgroundColor: '#000',
         paddingTop: 30,
       }}>
       <ScrollView keyboardShouldPersistTaps="handled">
@@ -157,11 +158,11 @@ export default function ChooseLocation(props: any) {
 }
 
 const styles = StyleSheet.create({
-  searchBar: {
-    marginBottom: 20,
-    backgroundColor: '#ECECEC',
-    width: '90%', // Adjust the width as needed
-  },
+  // searchBar: {
+  //   marginBottom: 20,
+  //   backgroundColor: '#ECECEC',
+  //   width: '90%', // Adjust the width as needed
+  // },
   button: {
     width: '100%', // Adjust the width as needed
   },

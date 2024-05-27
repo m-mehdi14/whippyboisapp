@@ -16,6 +16,7 @@ import LatestProducts from '../Components/Latest-Products';
 export default function HomeScreen({navigation}: any) {
   const [role, setrole] = useState('');
   const currentUser: any = useCurrentUser();
+  console.log('🚀 ~ HomeScreen ~ currentUser:', currentUser);
   const [data, setdata] = useState([]);
   const [search, setSearch] = useState('');
   const [filteredData, setFilteredData] = useState([]);
@@ -65,14 +66,16 @@ export default function HomeScreen({navigation}: any) {
           />
         </TouchableOpacity>
       )}
-      <TouchableOpacity onPress={() => navigation.navigate('notification')}>
-        <Icon
-          name="notifications"
-          size={24}
-          color="black"
-          style={{marginRight: 15}}
-        />
-      </TouchableOpacity>
+      {currentUser?.user?.role === 'customer' && (
+        <TouchableOpacity onPress={() => navigation.navigate('notification')}>
+          <Icon
+            name="notifications"
+            size={24}
+            color="black"
+            style={{marginRight: 15}}
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 

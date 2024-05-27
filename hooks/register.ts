@@ -28,7 +28,10 @@ export const registerUser = async (
 ) => {
   try {
     let db = getFirestore(app);
+    console.log('🚀 ~ name:', name);
+    console.log('🚀 ~ email:', email);
     console.log('passoword value --- > ', password);
+    console.log('🚀 ~ role:', role);
 
     if (password.length < 6) {
       return {
@@ -42,7 +45,7 @@ export const registerUser = async (
       email,
       password,
     );
-
+    console.log('Inside Customer SignUp function ------>', response);
     let fcmToken = await AsyncStorage.getItem('fcm_Token');
     await setDoc(doc(db, 'users', response?.user?.uid), {
       name: name,

@@ -35,6 +35,7 @@ const CustomerSignUpScreen = () => {
   const handleSubmitButton = async () => {
     setisloading(true);
     let response = await registerUser(name, email, confirmPassword, 'customer');
+    console.log('Customer Signup Response ----->', response);
     setisloading(false);
     if (response.success) {
       // Alert.alert("Sign up", response.success);

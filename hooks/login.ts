@@ -6,7 +6,6 @@ import {
   getDocs,
   getFirestore,
   query,
-  updateDoc,
   where,
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -101,7 +100,7 @@ export const DriverLoginUser = async (email: string, password: string) => {
         verify: 'User not verified!',
       };
     }
-    const userDocRef = querySnapshot.docs[0].ref;
+    // const userDocRef = querySnapshot.docs[0].ref;
     const response: any = await signInWithEmailAndPassword(
       auth,
       email,
@@ -114,17 +113,17 @@ export const DriverLoginUser = async (email: string, password: string) => {
       };
     }
 
-    // Retrieve the FCM token from AsyncStorage
-    let fcmToken = await AsyncStorage.getItem('fcm_Token');
-    if (fcmToken) {
-      // Update the Firestore document with the FCM token
-      await updateDoc(userDocRef, {
-        fcmToken: fcmToken,
-      });
-      console.log('FCM token updated in Firestore successfully.');
-    } else {
-      console.log('No FCM token available to store in Firestore.');
-    }
+    // // Retrieve the FCM token from AsyncStorage
+    // let fcmToken = await AsyncStorage.getItem('fcm_Token');
+    // if (fcmToken) {
+    //   // Update the Firestore document with the FCM token
+    //   await updateDoc(userDocRef, {
+    //     fcmToken: fcmToken,
+    //   });
+    //   console.log('FCM token updated in Firestore successfully.');
+    // } else {
+    //   console.log('No FCM token available to store in Firestore.');
+    // }
 
     // Store user data in AsyncStorage
     await AsyncStorage.setItem('user', JSON.stringify(userData));

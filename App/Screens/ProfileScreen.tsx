@@ -160,6 +160,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     borderColor: '#000',
-    marginTop: 300,
+    marginTop: 150,
   },
 });

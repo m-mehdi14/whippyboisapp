@@ -9,7 +9,6 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import Geolocation from '@react-native-community/geolocation';
@@ -26,7 +25,11 @@ import {
 } from '../../hooks/RouteFunctions';
 import messaging from '@react-native-firebase/messaging';
 import {getAllRouteAcceptRequests} from '../../hooks/RideAccept';
-import {SendNotifyDriverArrive} from '../../hooks/notificationService';
+import {
+  DriverOnlineFunction,
+  SendNotifyDriverArrive,
+} from '../../hooks/notificationService';
+import {useCurrentUser} from '../../hooks/currentUser';
 
 export default function MapScreen() {
   // Set a default location (e.g., New York City)
@@ -36,6 +39,7 @@ export default function MapScreen() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   };
+  const user = useCurrentUser();
   const [userLocation, setUserLocation] = useState<any>(defaultLocation);
   const [location, setLocation] = useState<any>(null);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -48,6 +52,8 @@ export default function MapScreen() {
   const [routesData, setRoutesData] = useState([]);
   const mapRef = useRef(null);
   console.log(location);
+  console.log('Selected language  ---> ', selectedLanguage);
+
   // console.log('Pickup Coordinates:', cords.pickupCords);
   // console.log('Dropoff Coordinates:', cords.dropCords);
 
@@ -111,6 +117,12 @@ export default function MapScreen() {
       }
     }
   }, [userLocation, cords.dropCords, routesData]);
+
+  // useEffect(() => {
+  //   if (selectedLanguage === 'online' && user) {
+  //     DriverOnlineFunction(user);
+  //   }
+  // }, [selectedLanguage, user]);
 
   const fetchAllRouteRequests = async () => {
     const requests = await getAllRouteAcceptRequests();
@@ -438,17 +450,17 @@ export default function MapScreen() {
                     }
                     dropdownIconColor={'#000'}>
                     <Picker.Item
-                      label="Online"
-                      value="online"
-                      style={{
-                        color: 'green',
-                      }}
-                    />
-                    <Picker.Item
                       label="Offline"
                       value="offline"
                       style={{
                         color: 'red',
+                      }}
+                    />
+                    <Picker.Item
+                      label="Online"
+                      value="online"
+                      style={{
+                        color: 'green',
                       }}
                     />
                   </Picker>

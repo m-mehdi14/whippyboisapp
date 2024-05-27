@@ -5,6 +5,7 @@ import messaging from '@react-native-firebase/messaging';
 import {collection, getDocs, getFirestore} from 'firebase/firestore';
 import {PermissionsAndroid, Platform} from 'react-native';
 import {app} from './firebaseConfig';
+import {useCurrentUser} from './currentUser';
 
 export async function requestUserPermission() {
   if (Platform.OS === 'android' && Platform.Version >= 33) {
@@ -109,9 +110,11 @@ export const getAllFcmTokens = async (pickUp: string, drop: string) => {
       pickUpAddress: pickUp, // Include pickUp address in the body
       dropAddress: drop, // Include drop address in the body
     };
-
+    // https://whippybois-express.vercel.app/
     const res = await fetch(
-      'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
+      // 'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
+      // 'https://whippybois-express.vercel.app/send-noti',
+      'https://whippybois-express.onrender.com/send-noti',
       {
         method: 'POST',
         headers: {
@@ -127,6 +130,55 @@ export const getAllFcmTokens = async (pickUp: string, drop: string) => {
     console.error('Error getting FCM tokens: ', error);
     // throw new Error(error.message);
   }
+};
+
+/**
+ *
+ * @param name
+ * @param tokens
+ * this function is for sending notification when driver is online
+ * @returns
+ */
+export const DriverOnlineFunction = async (user: any) => {
+  try {
+    console.log('Inside this function Driver Online function ----->');
+    console.log('🚀 ~ DriverOnlineFunction ~ user:', user);
+
+    // const user: any = useCurrentUser();
+    const db = getFirestore(app);
+    const fcmTokensCollection = collection(db, 'fcmTokens');
+    const querySnapshot = await getDocs(fcmTokensCollection);
+    const tokens = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // userId: data.userId,
+      // return {token: data.token};
+      return data.token;
+    });
+    console.log('All tokens ---> ', tokens);
+
+    const requestBody = {
+      tokens: tokens,
+      name: user.user.name,
+    };
+    console.log('Driver Online function ----> ', requestBody);
+
+    const res = await fetch(
+      // 'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
+      // 'https://whippybois-express.vercel.app/send-noti',
+      'https://whippybois-express.onrender.com/driver-online',
+      // 'https://aphid-driving-specially.ngrok-free.app/driver',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      },
+    ).catch(err => console.error('Fetch error:', err));
+    console.log(res);
+
+    return tokens;
+  } catch (error) {}
 };
 
 export const ChangeRouteNotify = async (pickUp: string, drop: string) => {
@@ -147,9 +199,11 @@ export const ChangeRouteNotify = async (pickUp: string, drop: string) => {
       pickUpAddress: pickUp, // Include pickUp address in the body
       dropAddress: drop, // Include drop address in the body
     };
-
+    //https://whippybois-express.vercel.app/
     const res = await fetch(
-      'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
+      // 'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
+      // 'https://whippybois-express.vercel.app/send-noti',
+      'https://whippybois-express.onrender.com/send-noti',
       {
         method: 'POST',
         headers: {
@@ -174,7 +228,9 @@ export const SendNotifyDriverArrive = async (token: string) => {
     };
 
     const res = await fetch(
-      'https://9b73-203-215-167-36.ngrok-free.app/driver-arrive',
+      // 'https://9b73-203-215-167-36.ngrok-free.app/driver-arrive',
+      // 'https://whippybois-express.vercel.app/driver-arrive',
+      'https://whippybois-express.onrender.com/driver-arrive',
       {
         method: 'POST',
         headers: {
