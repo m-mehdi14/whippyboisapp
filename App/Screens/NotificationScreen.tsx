@@ -44,11 +44,11 @@ export default function NotificationScreen() {
   console.log('🚀 ~ NotificationScreen ~ location:', location);
   console.log('🚀 ~ NotificationScreen ~ pickUpAddress:', pickUpAddress);
   const [dropAddress, setdropAddress] = useState('');
-  const [pressCount, setPressCount] = useState(0); // State to track button presses
   const [showPopup, setShowPopup] = useState(false);
   const [clickCounts, setClickCounts] = useState(0);
   const [customCode, setCustomCode] = useState('');
-  console.log('🚀 ~ NotificationScreen ~ dropAddress:', dropAddress);
+  const [hasClickedYes, setHasClickedYes] = useState(false); // Track if user has clicked "Yes"
+  const [currentNotificationId, setCurrentNotificationId] = useState('');
   const user: any = useCurrentUser();
   console.log('User ----> ', user);
 
@@ -59,10 +59,14 @@ export default function NotificationScreen() {
         var routes = await getDriverRouteData(token);
         if (routes.length > 0) {
           setRoutes(routes);
-          // Assuming the latest route is the one we want
           const latestRoute = routes[routes.length - 1];
           setpickUpAddress(latestRoute?.pickUpCords?.pickUpAddress);
           setdropAddress(latestRoute?.DestinationCords?.dropAddress);
+          setCurrentNotificationId(latestRoute?.notificationId); // Assuming notificationId is part of the route data
+          await checkIfUserClicked(
+            user?.user?.email,
+            latestRoute?.notificationId,
+          ); // Check if the user has clicked for this notification
         }
         const data = await getAllRouteAcceptRequests();
         console.log('Data --- > ', data);
@@ -75,16 +79,13 @@ export default function NotificationScreen() {
   }, []);
 
   useEffect(() => {
-    // notificationButton();
     requestLocationPermission(); // Request location permissions
   }, []);
+
   useEffect(() => {
     fetchCustomCode();
   }, []); // Empty dependency array ensures this runs only once when the component mounts
 
-  /**
-   * Request Location Permission
-   */
   const requestLocationPermission = async () => {
     try {
       if (Platform.OS === 'android') {
@@ -99,7 +100,6 @@ export default function NotificationScreen() {
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Location permission granted');
           getUserLocation();
         } else {
           console.log('Location permission denied');
@@ -112,31 +112,19 @@ export default function NotificationScreen() {
     }
   };
 
-  /**
-   * Get User Location
-   */
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
-        console.log('🚀 ~ getUserLocation ~ position:', position);
-        console.log(position?.coords);
         setUserLocation(position?.coords);
         setLocation(position); // Update location state
-        // setCords(prevCords => ({
-        //   ...prevCords,
-        //   pickupCords: {
-        //     latitude: position?.coords?.latitude,
-        //     longitude: position?.coords?.longitude,
-        //   },
-        // }));
       },
       error => {
-        // See error code charts below.
         console.log(error.code, error.message);
       },
       {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
     );
   };
+
   const fetchCustomCode = async () => {
     const db = getFirestore(app);
     const userId = user?.user?.email; // Assuming email is unique and used as a user ID
@@ -156,6 +144,11 @@ export default function NotificationScreen() {
   };
 
   const handleYesPress = async () => {
+    if (hasClickedYes) {
+      Alert.alert('You have already accepted this ride.');
+      return; // Prevent further processing if already clicked
+    }
+
     try {
       const db = getFirestore(app);
       const token = await messaging().getToken();
@@ -166,11 +159,12 @@ export default function NotificationScreen() {
       if (user?.user?.name && token && userLocation) {
         await RideAccept(user?.user?.name, token, userLocation).then(() => {
           Alert.alert('Driver is on his way!');
+          setHasClickedYes(true); // Set the state to true after successful click
+          saveUserClick(userId, currentNotificationId); // Save the click with notificationId
         });
 
         try {
           const docSnap = await getDoc(userDoc);
-          // let count = 0;
           let count = docSnap.exists() ? docSnap.data().clickCount + 1 : 1;
 
           if (docSnap.exists()) {
@@ -201,7 +195,36 @@ export default function NotificationScreen() {
     }
   };
 
-  // Function to generate a custom code
+  const saveUserClick = async (userId, notificationId) => {
+    const db = getFirestore(app);
+    const userDoc = doc(db, 'userClicks', userId);
+
+    try {
+      await updateDoc(userDoc, {notificationId});
+    } catch (error) {
+      console.error('Failed to save user click:', error);
+    }
+  };
+
+  const checkIfUserClicked = async (userId, notificationId) => {
+    const db = getFirestore(app);
+    const userDoc = doc(db, 'userClicks', userId);
+
+    try {
+      const docSnap = await getDoc(userDoc);
+      if (
+        docSnap.exists() &&
+        docSnap.data().notificationId === notificationId
+      ) {
+        setHasClickedYes(true);
+      } else {
+        setHasClickedYes(false);
+      }
+    } catch (error) {
+      console.error('Failed to check user click:', error);
+    }
+  };
+
   const generateCustomCode = () => {
     return Math.random().toString(36).substr(2, 9); // Example of generating a simple code
   };
@@ -233,13 +256,11 @@ export default function NotificationScreen() {
     </Modal>
   );
 
-  // Add Draggable Icon to the UI
   const DraggableIcon = () => (
     <Draggable
       x={-10} // X position on screen
       y={50} // Y position on screen
       renderColor="red" // Color of the draggable component
-      // renderShape="circle" // Shape of the draggable component
       onShortPressRelease={() => setShowPopup(true)} // Show the popup on click
       renderText="🍦" // Emoji as an icon
       isCircle
@@ -247,7 +268,6 @@ export default function NotificationScreen() {
     />
   );
 
-  // Render Item for FlatList
   const renderItem = ({item}: any) => (
     <View style={styles.notificationBox}>
       {pickUpAddress && dropAddress && (
@@ -255,24 +275,13 @@ export default function NotificationScreen() {
           <View style={styles.addressCard}>
             <Icon name="location-sharp" size={24} color="#1565C0" />
             <Text style={styles.addressText}>
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                }}>
-                Pickup :
-              </Text>{' '}
-              {pickUpAddress}
+              <Text style={{fontWeight: 'bold'}}>Pickup :</Text> {pickUpAddress}
             </Text>
           </View>
           <View style={styles.addressCard}>
             <Icon name="location-sharp" size={24} color="#C62828" />
             <Text style={styles.addressText}>
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                }}>
-                Drop :{' '}
-              </Text>
+              <Text style={{fontWeight: 'bold'}}>Drop : </Text>
               {dropAddress}
             </Text>
           </View>
@@ -292,62 +301,29 @@ export default function NotificationScreen() {
         </Text>
         <Text style={styles.notificationSubText}>Do you want something?</Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={handleYesPress} style={styles.buttonYes}>
+          <TouchableOpacity
+            onPress={handleYesPress}
+            style={styles.buttonYes}
+            disabled={hasClickedYes}>
             <Text style={styles.buttonText}>Yes</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity style={styles.buttonNo}>
-            <Text style={styles.buttonText}>No</Text>
-          </TouchableOpacity> */}
         </View>
       </View>
     </View>
   );
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* <ScrollView> */}
       <View style={styles.content}>
-        {/* Unified Notification Box */}
         <FlatList
           data={routes}
           renderItem={renderItem}
           keyExtractor={(item: any) => item.driverId}
           style={styles.list}
         />
-
-        {/* {customCode ? (
-          <View style={styles.codeDisplay}>
-            <Text>Your Custom Code: {customCode}</Text>
-          </View>
-        ) : null} */}
         <DraggableIcon />
         <PopupModal />
-        {/* Second Box */}
-        {/* <View
-          style={{
-            backgroundColor: '#B4B4B4',
-            height: 60,
-            // width: 320,
-            width: '100%',
-            marginTop: 10,
-            borderRadius: 10,
-            padding: 15,
-            alignItems: 'center',
-            flexDirection: 'row',
-            marginHorizontal: 'auto',
-          }}>
-          <Icon name="notifications" size={30} color="black" />
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '600',
-              marginLeft: 10,
-              color: '#000',
-            }}>
-            Driver Is On Your Location!!!
-          </Text>
-        </View> */}
       </View>
-      {/* </ScrollView> */}
     </SafeAreaView>
   );
 }
@@ -366,7 +342,6 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
     marginHorizontal: 15,
-    // marginBottom: 10,
   },
   notificationBox: {
     backgroundColor: '#E0E0E0',
@@ -436,7 +411,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // marginTop: 22,
     backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background for modal overlay
   },
   modalView: {

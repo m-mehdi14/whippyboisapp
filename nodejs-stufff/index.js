@@ -26,15 +26,16 @@ app.get('/', (req, res) => {
 app.post('/send-noti', (req, res) => {
   console.log(req.body);
   const {tokens, pickUpAddress, dropAddress} = req.body;
+  const notificationId = new Date().getTime().toString(); // Example of generating a simple notificationId
   const message = {
     notification: {
       title: 'Driver has planned a Route ❤',
-      body: `Pickup: ${pickUpAddress}, |
-            Drop: ${dropAddress}`,
+      body: `Pickup: ${pickUpAddress}, | Drop: ${dropAddress}`,
     },
     tokens: tokens,
     data: {
       navigationId: 'notification',
+      notificationId: notificationId, // Add notificationId to the data payload
     },
   };
 
@@ -43,24 +44,27 @@ app.post('/send-noti', (req, res) => {
     .sendEachForMulticast(message)
     .then(response => {
       console.log('Send SuccessFully', response);
+      res.status(200).send({success: true, notificationId: notificationId});
     })
     .catch(err => {
       console.log('Unable to Send', err);
+      res.status(500).send({success: false, error: err});
     });
 });
 
 app.post('/change-route', (req, res) => {
   console.log('Change Route Endpoint body ----- > ', req.body);
   const {tokens, pickUpAddress, dropAddress} = req.body;
+  const notificationId = new Date().getTime().toString(); // Example of generating a simple notificationId
   const message = {
     notification: {
       title: 'Driver has changed a Route ❤',
-      body: `Pickup: ${pickUpAddress}, |
-            Drop: ${dropAddress}`,
+      body: `Pickup: ${pickUpAddress}, | Drop: ${dropAddress}`,
     },
     tokens: tokens,
     data: {
       navigationId: 'notification',
+      notificationId: notificationId, // Add notificationId to the data payload
     },
   };
 
@@ -69,9 +73,11 @@ app.post('/change-route', (req, res) => {
     .sendEachForMulticast(message)
     .then(response => {
       console.log(' Change Route  Send SuccessFully', response);
+      res.status(200).send({success: true, notificationId: notificationId});
     })
     .catch(err => {
       console.log('Unable to Send', err);
+      res.status(500).send({success: false, error: err});
     });
 });
 

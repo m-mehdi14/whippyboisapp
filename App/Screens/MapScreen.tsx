@@ -1,6 +1,5 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
+/* eslint-disable prettier/prettier */
 import {
   View,
   PermissionsAndroid,
@@ -32,7 +31,6 @@ import {
 import {useCurrentUser} from '../../hooks/currentUser';
 
 export default function MapScreen() {
-  // Set a default location (e.g., New York City)
   const defaultLocation = {
     latitude: 40.7128,
     longitude: -74.006,
@@ -54,12 +52,8 @@ export default function MapScreen() {
   console.log(location);
   console.log('Selected language  ---> ', selectedLanguage);
 
-  // console.log('Pickup Coordinates:', cords.pickupCords);
-  // console.log('Dropoff Coordinates:', cords.dropCords);
-
   useEffect(() => {
-    // notificationButton();
-    requestLocationPermission(); // Request location permissions
+    requestLocationPermission();
     fetchAllRouteRequests();
     watchUserLocation();
     setModalVisible(false);
@@ -70,9 +64,8 @@ export default function MapScreen() {
       try {
         const token = await messaging().getToken();
         const routes = await getDriverRouteData(token);
-        setRoutesData(routes); // Store fetched routes in state
+        setRoutesData(routes);
         if (routes.length > 0) {
-          // Assuming the latest route is the one we want
           const latestRoute = routes[routes.length - 1];
           setCords({
             pickupCords: {
@@ -97,7 +90,6 @@ export default function MapScreen() {
     if (userLocation && cords.dropCords && routesData.length > 0) {
       const distance = getDistance(userLocation, cords.dropCords);
       if (distance < 50) {
-        // Threshold in meters
         routesData.forEach((route: any) => {
           deleteRoutesByDriverId(route.driverId)
             .then(() => {
@@ -118,41 +110,15 @@ export default function MapScreen() {
     }
   }, [userLocation, cords.dropCords, routesData]);
 
-  // useEffect(() => {
-  //   if (selectedLanguage === 'online' && user) {
-  //     DriverOnlineFunction(user);
-  //   }
-  // }, [selectedLanguage, user]);
-
   const fetchAllRouteRequests = async () => {
     const requests = await getAllRouteAcceptRequests();
-    setRouteRequests(requests); // Store fetched data
+    setRouteRequests(requests);
   };
-
-  // useEffect(() => {
-  //   const triggerNotification = async () => {
-  //     if (cords.pickupCords && cords.dropCords) {
-  //       const notificationData = {
-  //         token:
-  //           'cG1FWDU4ROqpMlIvCYj6Uv:APA91bFtOs9M2uemgy6_DaeIMnjaf2Wk665BuFryDFH4PjoZ4-BHWz7xY_jbLeKyiJKpOs6YGvtdps73WWMygYwgbBsIywYNBOXP4k6CjO5ibBC1s5nNKtNj1Gqv49Ruvs6_hX70wKxN',
-  //         title: 'Route Planned',
-  //         body: 'Your route has been set. Tap to view details!',
-  //         navigationId: 'notification',
-  //       };
-  //       await sendNotification(notificationData);
-  //     }
-  //   };
-
-  //   triggerNotification();
-  // }, [cords]); // Dependency array includes 'cords' to re-run effect when cords change
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
 
-  /**
-   * Request Location Permission
-   */
   const requestLocationPermission = async () => {
     try {
       if (Platform.OS === 'android') {
@@ -180,26 +146,15 @@ export default function MapScreen() {
     }
   };
 
-  /**
-   * Get User Location
-   */
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
         console.log('🚀 ~ getUserLocation ~ position:', position);
         console.log(position?.coords);
         setUserLocation(position?.coords);
-        setLocation(position); // Update location state
-        // setCords(prevCords => ({
-        //   ...prevCords,
-        //   pickupCords: {
-        //     latitude: position?.coords?.latitude,
-        //     longitude: position?.coords?.longitude,
-        //   },
-        // }));
+        setLocation(position);
       },
       error => {
-        // See error code charts below.
         console.log(error.code, error.message);
       },
       {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
@@ -207,9 +162,6 @@ export default function MapScreen() {
   };
 
   const getCordinatesFromUser = (data: any) => {
-    // console.log("Data is On Map Screen ----> ", data);
-
-    // Saved this Coordinates in the use State.
     setCords({
       ...cords,
       pickupCords: {
@@ -251,7 +203,6 @@ export default function MapScreen() {
       );
 
       if (distance < 50) {
-        // Threshold in meters
         SendNotifyDriverArrive(request?.driverId)
           .then(() => {
             console.log('Notification sent to driver at location.');
@@ -263,7 +214,6 @@ export default function MapScreen() {
     });
   };
 
-  // Helper function to calculate distance between two coordinates
   const getDistance = (loc1: any, loc2: any) => {
     const radlat1 = (Math.PI * loc1.latitude) / 180;
     const radlat2 = (Math.PI * loc2.latitude) / 180;
@@ -278,7 +228,7 @@ export default function MapScreen() {
     dist = Math.acos(dist);
     dist = (dist * 180) / Math.PI;
     dist = dist * 60 * 1.1515;
-    dist = dist * 1.609344 * 1000; // Meters
+    dist = dist * 1.609344 * 1000;
     return dist;
   };
 
@@ -318,7 +268,6 @@ export default function MapScreen() {
               elevation: 0,
               shadowOpacity: 0,
               shadowRadius: 0,
-              // borderWidth: 6,
             }}
           />
         </TouchableOpacity>
@@ -370,40 +319,39 @@ export default function MapScreen() {
             image={ImagePath?.isGreenMarker}
           />
         )}
-        {cords?.pickupCords && cords?.dropCords && (
-          <>
-            <MapViewDirections
-              origin={cords?.pickupCords}
-              destination={cords?.dropCords}
-              strokeWidth={3}
-              strokeColor="blue"
-              apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
-              optimizeWaypoints={true}
-              onReady={result => {
-                if (cords.pickupCords && cords.dropCords) {
-                  mapRef?.current?.fitToCoordinates(result.coordinates, {
-                    edgePadding: {
-                      right: 30,
-                      bottom: 300,
-                      left: 30,
-                      top: 100,
-                    },
-                  });
-                }
-              }}
-              onError={errorMessage => {
-                console.log('GMAPS route request error:', errorMessage);
-              }}
-            />
-          </>
-        )}
+        {routesData?.map((route, index) => (
+          <MapViewDirections
+            key={index}
+            origin={{
+              latitude: route.pickUpCords.latitude,
+              longitude: route.pickUpCords.longitude,
+            }}
+            destination={{
+              latitude: route.DestinationCords.latitude,
+              longitude: route.DestinationCords.longitude,
+            }}
+            strokeWidth={3}
+            strokeColor="blue"
+            apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
+            optimizeWaypoints={true}
+            onReady={result => {
+              mapRef?.current?.fitToCoordinates(result.coordinates, {
+                edgePadding: {
+                  right: 30,
+                  bottom: 300,
+                  left: 30,
+                  top: 100,
+                },
+              });
+            }}
+            onError={errorMessage => {
+              console.log('GMAPS route request error:', errorMessage);
+            }}
+          />
+        ))}
       </MapView>
 
       <View style={styles.flexView}>
-        {/* <View>
-          <Button title="Show Bottom Sheet" onPress={toggleModal} />
-        </View> */}
-
         <Modal
           onBackButtonPress={() => setModalVisible(false)}
           onBackdropPress={() => setModalVisible(false)}
@@ -420,12 +368,10 @@ export default function MapScreen() {
           <View style={styles.modalContent}>
             <View style={styles.center}>
               <View style={styles.barIcon} />
-              {/* <Text>Welcome to bottom sheet Testing</Text> */}
               <View
                 style={{
                   marginTop: 30,
                   width: '100%',
-                  // flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}>
@@ -525,7 +471,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Adjust the opacity as needed
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   flexView: {
     flex: 1,
@@ -537,7 +483,6 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   modalContent: {
-    // backgroundColor: '#161616',
     backgroundColor: '#C3C3C3',
     paddingTop: 12,
     paddingHorizontal: 12,
@@ -554,7 +499,6 @@ const styles = StyleSheet.create({
   barIcon: {
     width: 60,
     height: 5,
-    // backgroundColor: '#bbb',
     borderRadius: 3,
     backgroundColor: '#000',
   },
