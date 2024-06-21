@@ -111,6 +111,7 @@ export default function ChooseLocation(props: any) {
         width: '100%',
         // marginTop: 20,
         backgroundColor: '#ffffff',
+        // backgroundColor: '#bdbebf',
         // backgroundColor: '#000',
         paddingTop: 30,
       }}>

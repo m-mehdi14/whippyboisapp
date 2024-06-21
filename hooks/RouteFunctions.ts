@@ -103,24 +103,60 @@ export const getDriverRouteData = async (driverId?: string) => {
   }
 };
 
+// export const deleteRoutesByDriverId = async (driverId: any) => {
+//   const db = getFirestore();
+//   const coordsCollection = collection(db, 'DriverRouteCoordinates');
+//   const driverRoutesQuery = query(
+//     coordsCollection,
+//     where('driverId', '==', driverId),
+//   );
+
+//   try {
+//     const querySnapshot = await getDocs(driverRoutesQuery);
+//     const batch = writeBatch(db); // Correctly initiate a batch write
+
+//     querySnapshot.forEach(docSnapshot => {
+//       batch.delete(docSnapshot.ref); // Schedule each document for deletion
+//     });
+
+//     await batch.commit(); // Execute all deletions in the batch
+//     console.log('All routes for driverId ' + driverId + ' have been deleted!');
+//   } catch (error) {
+//     console.error('Error removing documents: ', error);
+//   }
+// };
+
 export const deleteRoutesByDriverId = async (driverId: any) => {
   const db = getFirestore();
   const coordsCollection = collection(db, 'DriverRouteCoordinates');
+  const routeAcceptCollection = collection(db, 'RouteAcceptRequest');
+
   const driverRoutesQuery = query(
     coordsCollection,
     where('driverId', '==', driverId),
   );
 
   try {
-    const querySnapshot = await getDocs(driverRoutesQuery);
     const batch = writeBatch(db); // Correctly initiate a batch write
 
-    querySnapshot.forEach(docSnapshot => {
+    // Delete DriverRouteCoordinates
+    const coordsSnapshot = await getDocs(driverRoutesQuery);
+    coordsSnapshot.forEach(docSnapshot => {
+      batch.delete(docSnapshot.ref); // Schedule each document for deletion
+    });
+
+    // Delete all documents in RouteAcceptRequest
+    const routeAcceptSnapshot = await getDocs(routeAcceptCollection);
+    routeAcceptSnapshot.forEach(docSnapshot => {
       batch.delete(docSnapshot.ref); // Schedule each document for deletion
     });
 
     await batch.commit(); // Execute all deletions in the batch
-    console.log('All routes for driverId ' + driverId + ' have been deleted!');
+    console.log(
+      'All routes and requests for driverId ' +
+        driverId +
+        ' have been deleted!',
+    );
   } catch (error) {
     console.error('Error removing documents: ', error);
   }

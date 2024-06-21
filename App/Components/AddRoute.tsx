@@ -30,12 +30,12 @@ const AddRoute = ({getData, cords}: AddRouteProps) => {
   };
 
   // Function for Change route
-  // const onPressChangeRoute = () => {
-  //   //@ts-ignore
-  //   nav.navigate('changeRoute', {
-  //     getCordinates: fetchValues,
-  //   });
-  // };
+  const onPressChangeRoute = () => {
+    //@ts-ignore
+    nav.navigate('changeRoute', {
+      getCordinates: fetchValues,
+    });
+  };
 
   const fetchValues = (data: any) => {
     console.log('Data ---> ', data);
@@ -44,7 +44,7 @@ const AddRoute = ({getData, cords}: AddRouteProps) => {
   };
   return (
     <>
-      {/* {cords ? (
+      {cords ? (
         <TouchableOpacity
           style={{
             backgroundColor: '#FF0000',
@@ -88,8 +88,8 @@ const AddRoute = ({getData, cords}: AddRouteProps) => {
             Set Marker
           </Text>
         </TouchableOpacity>
-      )} */}
-      <TouchableOpacity
+      )}
+      {/* <TouchableOpacity
         style={{
           backgroundColor: '#FF0000',
           height: 45,
@@ -109,7 +109,7 @@ const AddRoute = ({getData, cords}: AddRouteProps) => {
           }}>
           Set Marker
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </>
   );
 };

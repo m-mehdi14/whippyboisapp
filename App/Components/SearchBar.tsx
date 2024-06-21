@@ -40,8 +40,9 @@ const SearchBar = ({placeholder, style, fetchAddress}: SearchBarProps) => {
         styles={{
           textInputContainer: styles.containerStyle,
           textInput: styles.textInput,
-          placeholderText: styles.placeholderText, // Ensure placeholder text is clearly visible
+          // placeholderText: styles.placeholderText, // Ensure placeholder text is clearly visible
           listView: styles.listView, // Style for the list of suggestions
+          description: {color: 'black'},
         }}
       />
     </View>
@@ -71,18 +72,18 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: '#E4E4E4',
-    color: '#000', // Make sure text is black
+    color: '#000000', // Make sure text is black
     fontSize: 17,
     shadowColor: 'black',
     shadowOffset: {width: 0, height: 2},
     height: 60,
   },
   placeholderText: {
-    color: '#000', // Set placeholder text color to black if needed
+    color: '#000000', // Set placeholder text color to black if needed
   },
   listView: {
-    backgroundColor: '#000', // Background of the list can be white for better contrast
-    color: '#ffffff', // Text color for the list items
+    backgroundColor: '#FECC1D', // Background of the list can be white for better contrast
+    color: '#0000', // Text color for the list items
   },
   poweredContainer: {
     display: 'none', // Hide powered by container if not required

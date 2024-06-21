@@ -38,7 +38,7 @@ export default function HomeScreen({navigation}: any) {
   }, []);
 
   useEffect(() => {
-    const filteredProducts = data.filter(product => {
+    const filteredProducts = data.filter((product: any) => {
       return product.titleValue.toLowerCase().includes(search.toLowerCase());
     });
     setFilteredData(filteredProducts);

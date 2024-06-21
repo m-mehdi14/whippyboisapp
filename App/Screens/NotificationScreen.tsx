@@ -34,23 +34,21 @@ import {
 import {app} from '../../hooks/firebaseConfig';
 import {Modal} from 'react-native';
 import Draggable from 'react-native-draggable';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function NotificationScreen() {
   const [pickUpAddress, setpickUpAddress] = useState('');
   const [userLocation, setUserLocation] = useState<any>(null);
   const [routes, setRoutes] = useState([]); // State to store routes
-  console.log('🚀 ~ NotificationScreen ~ userLocation:', userLocation);
   const [location, setLocation] = useState<any>(null);
-  console.log('🚀 ~ NotificationScreen ~ location:', location);
-  console.log('🚀 ~ NotificationScreen ~ pickUpAddress:', pickUpAddress);
   const [dropAddress, setdropAddress] = useState('');
+  const [pressCount, setPressCount] = useState(0); // State to track button presses
   const [showPopup, setShowPopup] = useState(false);
   const [clickCounts, setClickCounts] = useState(0);
   const [customCode, setCustomCode] = useState('');
-  const [hasClickedYes, setHasClickedYes] = useState(false); // Track if user has clicked "Yes"
-  const [currentNotificationId, setCurrentNotificationId] = useState('');
+  const [disabledButtons, setDisabledButtons] = useState<string[]>([]); // State to track disabled buttons
+  const [notifications, setNotifications] = useState<any[]>([]); // State to store notifications with timestamps
   const user: any = useCurrentUser();
-  console.log('User ----> ', user);
 
   useEffect(() => {
     const fetchDriverRouteData = async () => {
@@ -58,15 +56,17 @@ export default function NotificationScreen() {
         const token = await messaging().getToken();
         var routes = await getDriverRouteData(token);
         if (routes.length > 0) {
-          setRoutes(routes);
+          const timestampedRoutes = routes.map(route => ({
+            ...route,
+            createdAt: new Date(route.createdAt).getTime(), // Convert createdAt to timestamp
+          }));
+          await saveNotificationsToStorage(timestampedRoutes);
+          setRoutes(timestampedRoutes);
+          setNotifications(timestampedRoutes);
+          // Assuming the latest route is the one we want
           const latestRoute = routes[routes.length - 1];
           setpickUpAddress(latestRoute?.pickUpCords?.pickUpAddress);
           setdropAddress(latestRoute?.DestinationCords?.dropAddress);
-          setCurrentNotificationId(latestRoute?.notificationId); // Assuming notificationId is part of the route data
-          await checkIfUserClicked(
-            user?.user?.email,
-            latestRoute?.notificationId,
-          ); // Check if the user has clicked for this notification
         }
         const data = await getAllRouteAcceptRequests();
         console.log('Data --- > ', data);
@@ -76,6 +76,8 @@ export default function NotificationScreen() {
     };
 
     fetchDriverRouteData();
+    loadNotificationsFromStorage(); // Load notifications from storage
+    loadDisabledButtons(); // Load disabled buttons from storage
   }, []);
 
   useEffect(() => {
@@ -86,6 +88,74 @@ export default function NotificationScreen() {
     fetchCustomCode();
   }, []); // Empty dependency array ensures this runs only once when the component mounts
 
+  /**
+   * Load Disabled Buttons from Storage
+   */
+  const loadDisabledButtons = async () => {
+    try {
+      const disabledButtonsString = await AsyncStorage.getItem(
+        'disabledButtons',
+      );
+      if (disabledButtonsString) {
+        setDisabledButtons(JSON.parse(disabledButtonsString));
+      }
+    } catch (error) {
+      console.error('Failed to load disabled buttons from storage:', error);
+    }
+  };
+
+  /**
+   * Save Disabled Buttons to Storage
+   */
+  const saveDisabledButtons = async (buttons: string[]) => {
+    try {
+      await AsyncStorage.setItem('disabledButtons', JSON.stringify(buttons));
+    } catch (error) {
+      console.error('Failed to save disabled buttons to storage:', error);
+    }
+  };
+
+  /**
+   * Load Notifications from Storage
+   */
+  const loadNotificationsFromStorage = async () => {
+    try {
+      const notificationsString = await AsyncStorage.getItem('notifications');
+      if (notificationsString) {
+        const storedNotifications = JSON.parse(notificationsString);
+        const filteredNotifications = filterNotifications(storedNotifications);
+        setNotifications(filteredNotifications);
+      }
+    } catch (error) {
+      console.error('Failed to load notifications from storage:', error);
+    }
+  };
+
+  /**
+   * Save Notifications to Storage
+   */
+  const saveNotificationsToStorage = async (notifications: any[]) => {
+    try {
+      const existingNotificationsString = await AsyncStorage.getItem(
+        'notifications',
+      );
+      let existingNotifications = [];
+      if (existingNotificationsString) {
+        existingNotifications = JSON.parse(existingNotificationsString);
+      }
+      const allNotifications = [...existingNotifications, ...notifications];
+      await AsyncStorage.setItem(
+        'notifications',
+        JSON.stringify(allNotifications),
+      );
+    } catch (error) {
+      console.error('Failed to save notifications to storage:', error);
+    }
+  };
+
+  /**
+   * Request Location Permission
+   */
   const requestLocationPermission = async () => {
     try {
       if (Platform.OS === 'android') {
@@ -100,6 +170,7 @@ export default function NotificationScreen() {
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Location permission granted');
           getUserLocation();
         } else {
           console.log('Location permission denied');
@@ -112,9 +183,13 @@ export default function NotificationScreen() {
     }
   };
 
+  /**
+   * Get User Location
+   */
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
+        console.log('🚀 ~ getUserLocation ~ position:', position);
         setUserLocation(position?.coords);
         setLocation(position); // Update location state
       },
@@ -143,11 +218,8 @@ export default function NotificationScreen() {
     }
   };
 
-  const handleYesPress = async () => {
-    if (hasClickedYes) {
-      Alert.alert('You have already accepted this ride.');
-      return; // Prevent further processing if already clicked
-    }
+  const handleYesPress = async (routeId: string) => {
+    if (disabledButtons.includes(routeId)) return; // Prevent multiple clicks
 
     try {
       const db = getFirestore(app);
@@ -159,8 +231,8 @@ export default function NotificationScreen() {
       if (user?.user?.name && token && userLocation) {
         await RideAccept(user?.user?.name, token, userLocation).then(() => {
           Alert.alert('Driver is on his way!');
-          setHasClickedYes(true); // Set the state to true after successful click
-          saveUserClick(userId, currentNotificationId); // Save the click with notificationId
+          setDisabledButtons([...disabledButtons, routeId]); // Disable "Yes" button for this route
+          saveDisabledButtons([...disabledButtons, routeId]); // Persist disabled buttons to storage
         });
 
         try {
@@ -195,36 +267,7 @@ export default function NotificationScreen() {
     }
   };
 
-  const saveUserClick = async (userId, notificationId) => {
-    const db = getFirestore(app);
-    const userDoc = doc(db, 'userClicks', userId);
-
-    try {
-      await updateDoc(userDoc, {notificationId});
-    } catch (error) {
-      console.error('Failed to save user click:', error);
-    }
-  };
-
-  const checkIfUserClicked = async (userId, notificationId) => {
-    const db = getFirestore(app);
-    const userDoc = doc(db, 'userClicks', userId);
-
-    try {
-      const docSnap = await getDoc(userDoc);
-      if (
-        docSnap.exists() &&
-        docSnap.data().notificationId === notificationId
-      ) {
-        setHasClickedYes(true);
-      } else {
-        setHasClickedYes(false);
-      }
-    } catch (error) {
-      console.error('Failed to check user click:', error);
-    }
-  };
-
+  // Function to generate a custom code
   const generateCustomCode = () => {
     return Math.random().toString(36).substr(2, 9); // Example of generating a simple code
   };
@@ -256,11 +299,13 @@ export default function NotificationScreen() {
     </Modal>
   );
 
+  // Add Draggable Icon to the UI
   const DraggableIcon = () => (
     <Draggable
       x={-10} // X position on screen
       y={50} // Y position on screen
       renderColor="red" // Color of the draggable component
+      // renderShape="circle" // Shape of the draggable component
       onShortPressRelease={() => setShowPopup(true)} // Show the popup on click
       renderText="🍦" // Emoji as an icon
       isCircle
@@ -268,6 +313,18 @@ export default function NotificationScreen() {
     />
   );
 
+  /**
+   * Filter Notifications
+   * This function filters out notifications older than 20 minutes.
+   */
+  const filterNotifications = (notifications: any[]) => {
+    const now = new Date().getTime();
+    return notifications.filter(notification => {
+      return now - notification.createdAt <= 20 * 60 * 1000;
+    });
+  };
+
+  // Render Item for FlatList
   const renderItem = ({item}: any) => (
     <View style={styles.notificationBox}>
       {pickUpAddress && dropAddress && (
@@ -275,13 +332,24 @@ export default function NotificationScreen() {
           <View style={styles.addressCard}>
             <Icon name="location-sharp" size={24} color="#1565C0" />
             <Text style={styles.addressText}>
-              <Text style={{fontWeight: 'bold'}}>Pickup :</Text> {pickUpAddress}
+              <Text
+                style={{
+                  fontWeight: 'bold',
+                }}>
+                Pickup :
+              </Text>{' '}
+              {pickUpAddress}
             </Text>
           </View>
           <View style={styles.addressCard}>
             <Icon name="location-sharp" size={24} color="#C62828" />
             <Text style={styles.addressText}>
-              <Text style={{fontWeight: 'bold'}}>Drop : </Text>
+              <Text
+                style={{
+                  fontWeight: 'bold',
+                }}>
+                Drop :{' '}
+              </Text>
               {dropAddress}
             </Text>
           </View>
@@ -302,9 +370,12 @@ export default function NotificationScreen() {
         <Text style={styles.notificationSubText}>Do you want something?</Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            onPress={handleYesPress}
-            style={styles.buttonYes}
-            disabled={hasClickedYes}>
+            onPress={() => handleYesPress(item.driverId)}
+            style={[
+              styles.buttonYes,
+              disabledButtons.includes(item.driverId) && styles.buttonDisabled,
+            ]}
+            disabled={disabledButtons.includes(item.driverId)}>
             <Text style={styles.buttonText}>Yes</Text>
           </TouchableOpacity>
         </View>
@@ -316,13 +387,11 @@ export default function NotificationScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <FlatList
-          data={routes}
+          data={filterNotifications(notifications)}
           renderItem={renderItem}
           keyExtractor={(item: any) => item.driverId}
           style={styles.list}
         />
-        <DraggableIcon />
-        <PopupModal />
       </View>
     </SafeAreaView>
   );
@@ -390,22 +459,11 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
   },
-  buttonNo: {
-    height: 41,
-    backgroundColor: '#DD4B4B',
-    borderRadius: 10,
-    width: '45%',
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonDisabled: {
+    backgroundColor: '#A5D6A7', // A different shade to indicate it's disabled
   },
   list: {
     width: '100%',
-  },
-  codeDisplay: {
-    padding: 10,
-    marginTop: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 5,
   },
   centeredView: {
     flex: 1,
@@ -439,6 +497,7 @@ const styles = StyleSheet.create({
   },
   buttonClose: {
     backgroundColor: '#2196F3',
+    borderRadius: 20,
     padding: 10,
     elevation: 2,
   },

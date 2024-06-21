@@ -34,7 +34,7 @@ const LatestProducts = ({data}: any) => {
               }}>
               {item?.titleValue}
             </Text>
-            {item?.userEmail === user?.user?.email && (
+            {item?.role === user?.user?.role && (
               <>
                 <TouchableOpacity
                   style={{
@@ -44,7 +44,6 @@ const LatestProducts = ({data}: any) => {
                     position: 'absolute',
                     top: 3,
                     right: 14,
-                    padding: 3,
                   }}
                   onPress={() => deleteProduct(item.id)}>
                   <Icon name="close" size={17} color={'white'} />

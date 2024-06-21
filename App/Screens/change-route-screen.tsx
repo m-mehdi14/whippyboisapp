@@ -112,8 +112,8 @@ export default function ChangeRouteScreen(props: any) {
         flex: 1,
         width: '100%',
         // marginTop: 20,
-        // backgroundColor: '#ffffff',
-        backgroundColor: '#bdbebf',
+        backgroundColor: '#ffffff',
+        // backgroundColor: '#bdbebf',
         paddingTop: 30,
       }}>
       <ScrollView keyboardShouldPersistTaps="handled">

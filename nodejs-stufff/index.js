@@ -29,8 +29,9 @@ app.post('/send-noti', (req, res) => {
   const notificationId = new Date().getTime().toString(); // Example of generating a simple notificationId
   const message = {
     notification: {
-      title: 'Driver has planned a Route ❤',
-      body: `Pickup: ${pickUpAddress}, | Drop: ${dropAddress}`,
+      title: 'Driver has planned a Route ',
+      // body: `Pickup: ${pickUpAddress}, | Drop: ${dropAddress}`,
+      body: '',
     },
     tokens: tokens,
     data: {
@@ -58,8 +59,9 @@ app.post('/change-route', (req, res) => {
   const notificationId = new Date().getTime().toString(); // Example of generating a simple notificationId
   const message = {
     notification: {
-      title: 'Driver has changed a Route ❤',
-      body: `Pickup: ${pickUpAddress}, | Drop: ${dropAddress}`,
+      title: 'Driver has changed a Route ',
+      // body: `Pickup: ${pickUpAddress}, | Drop: ${dropAddress}`,
+      body: '',
     },
     tokens: tokens,
     data: {

@@ -50,7 +50,9 @@ export default function MapScreen() {
   const [routesData, setRoutesData] = useState([]);
   const mapRef = useRef(null);
   console.log(location);
-  console.log('Selected language  ---> ', selectedLanguage);
+  console.log('Route Data ---> ', routesData);
+
+  // console.log('Selected language  ---> ', selectedLanguage);
 
   useEffect(() => {
     requestLocationPermission();
@@ -319,7 +321,34 @@ export default function MapScreen() {
             image={ImagePath?.isGreenMarker}
           />
         )}
-        {routesData?.map((route, index) => (
+        {cords?.pickupCords && cords?.dropCords && (
+          <>
+            <MapViewDirections
+              origin={cords?.pickupCords}
+              destination={cords?.dropCords}
+              strokeWidth={3}
+              strokeColor="blue"
+              apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
+              optimizeWaypoints={true}
+              onReady={result => {
+                if (cords.pickupCords && cords.dropCords) {
+                  mapRef?.current?.fitToCoordinates(result.coordinates, {
+                    edgePadding: {
+                      right: 30,
+                      bottom: 300,
+                      left: 30,
+                      top: 100,
+                    },
+                  });
+                }
+              }}
+              onError={errorMessage => {
+                console.log('GMAPS route request error:', errorMessage);
+              }}
+            />
+          </>
+        )}
+        {/* {routesData?.map((route: any, index: any) => (
           <MapViewDirections
             key={index}
             origin={{
@@ -348,7 +377,7 @@ export default function MapScreen() {
               console.log('GMAPS route request error:', errorMessage);
             }}
           />
-        ))}
+        ))} */}
       </MapView>
 
       <View style={styles.flexView}>
