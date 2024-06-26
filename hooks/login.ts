@@ -2,6 +2,7 @@
 import {signInWithEmailAndPassword} from 'firebase/auth';
 import {app, auth} from './firebaseConfig';
 import {
+  addDoc,
   collection,
   getDocs,
   getFirestore,
@@ -9,6 +10,7 @@ import {
   where,
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import messaging from '@react-native-firebase/messaging';
 // import PushNotification from 'react-native-push-notification';
 
 // const createChannels = async () => {
@@ -58,7 +60,15 @@ export const loginUser = async (email: string, password: string) => {
         error: 'User not found!',
       };
     }
+    let fcmToken = await AsyncStorage.getItem('fcm_Token');
     // await createChannels();
+    const token = await messaging().getToken();
+    if (token) {
+      await addDoc(collection(db, 'fcmTokens'), {
+        userId: response.user.uid,
+        token: fcmToken,
+      });
+    }
 
     return {
       success: 'User logged in successfully!',
@@ -111,6 +121,16 @@ export const DriverLoginUser = async (email: string, password: string) => {
       return {
         error: 'User not found!',
       };
+    }
+
+    let fcmToken = await AsyncStorage.getItem('fcm_Token');
+    // await createChannels();
+    const token = await messaging().getToken();
+    if (token) {
+      await addDoc(collection(db, 'fcmTokens'), {
+        userId: response.user.uid,
+        token: fcmToken,
+      });
     }
 
     // // Retrieve the FCM token from AsyncStorage
