@@ -1,13 +1,13 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 
-import {View, Text, SafeAreaView, FlatList, ScrollView} from 'react-native';
+import {View, Text, SafeAreaView, FlatList} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {StyleSheet} from 'react-native';
 import {getBookingsDetails} from '../../hooks/getBookingsDetails';
 
-export default function DrvierPostScreen() {
+export default function DriverPostScreen() {
   const insets = useSafeAreaInsets();
   const [booking, setBooking] = useState([]);
   console.log('Booking Details Fetched ---> ', booking);
@@ -44,24 +44,22 @@ export default function DrvierPostScreen() {
 
   return (
     <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
-      <ScrollView style={{flex: 1, width: '100%'}}>
-        <View style={styles.content}>
-          <View style={{width: '100%', alignItems: 'center'}}>
-            <Text style={styles.headingText}>Whippy Bois</Text>
-            <Text style={styles.subHeading}>Bookings</Text>
-          </View>
-          {booking?.length === 0 ? (
-            <Text style={styles.noBookingText}>No booking available</Text>
-          ) : (
-            <FlatList
-              data={booking}
-              renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
-              contentContainerStyle={styles.flatListContent}
-            />
-          )}
+      <View style={styles.content}>
+        <View style={{width: '100%', alignItems: 'center'}}>
+          <Text style={styles.headingText}>Whippy Bois</Text>
+          <Text style={styles.subHeading}>Bookings</Text>
         </View>
-      </ScrollView>
+        {booking?.length === 0 ? (
+          <Text style={styles.noBookingText}>No booking available</Text>
+        ) : (
+          <FlatList
+            data={booking}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={styles.flatListContent}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -76,7 +74,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     marginTop: 35,
-    // alignItems: 'center',
     width: '100%',
   },
   headingText: {
@@ -97,7 +94,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 15,
     padding: 15,
-    width: '100%', // Set width to full
+    width: '100%',
+    marginHorizontal: 10,
   },
   bookingHeading: {
     fontSize: 18,
@@ -116,8 +114,9 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   flatListContent: {
-    paddingHorizontal: 20, // Add horizontal padding for better spacing
+    paddingHorizontal: 20,
     width: '100%',
+    paddingBottom: 150,
   },
   noBookingText: {
     fontSize: 18,
