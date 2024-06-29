@@ -313,14 +313,26 @@ export default function NotificationScreen() {
     />
   );
 
+  // /**
+  //  * Filter Notifications
+  //  * This function filters out notifications older than 20 minutes.
+  //  */
+  // const filterNotifications = (notifications: any[]) => {
+  //   const now = new Date().getTime();
+  //   return notifications.filter(notification => {
+  //     return now - notification.createdAt <= 20 * 60 * 1000;
+  //   });
+  // };
+
   /**
    * Filter Notifications
-   * This function filters out notifications older than 20 minutes.
+   * This function filters out notifications older than 12 hours.
    */
   const filterNotifications = (notifications: any[]) => {
     const now = new Date().getTime();
+    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
     return notifications.filter(notification => {
-      return now - notification.createdAt <= 20 * 60 * 1000;
+      return now - notification.createdAt <= twelveHours;
     });
   };
 
