@@ -17,7 +17,7 @@ import React, {useEffect, useState} from 'react';
 import {StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import messaging from '@react-native-firebase/messaging';
-import {getDriverRouteData} from '../../hooks/RouteFunctions';
+import {getDriverRouteData, getNotification} from '../../hooks/RouteFunctions';
 import Geolocation from '@react-native-community/geolocation';
 import {RideAccept, getAllRouteAcceptRequests} from '../../hooks/RideAccept';
 import {useCurrentUser} from '../../hooks/currentUser';
@@ -30,6 +30,10 @@ import {
   getFirestore,
   setDoc,
   updateDoc,
+  getDocs,
+  query,
+  where,
+  Timestamp,
 } from 'firebase/firestore';
 import {app} from '../../hooks/firebaseConfig';
 import {Modal} from 'react-native';
@@ -48,49 +52,17 @@ export default function NotificationScreen() {
   const [customCode, setCustomCode] = useState('');
   const [disabledButtons, setDisabledButtons] = useState<string[]>([]); // State to track disabled buttons
   const [notifications, setNotifications] = useState<any[]>([]); // State to store notifications with timestamps
+  console.log('Notifications ---- > ', notifications);
+
   const user: any = useCurrentUser();
 
   useEffect(() => {
-    const fetchDriverRouteData = async () => {
-      try {
-        const token = await messaging().getToken();
-        var routes = await getDriverRouteData(token);
-        if (routes.length > 0) {
-          const timestampedRoutes = routes.map(route => ({
-            ...route,
-            createdAt: new Date(route.createdAt).getTime(), // Convert createdAt to timestamp
-          }));
-          await saveNotificationsToStorage(timestampedRoutes);
-          setRoutes(timestampedRoutes);
-          setNotifications(timestampedRoutes);
-          // Assuming the latest route is the one we want
-          const latestRoute = routes[routes.length - 1];
-          setpickUpAddress(latestRoute?.pickUpCords?.pickUpAddress);
-          setdropAddress(latestRoute?.DestinationCords?.dropAddress);
-        }
-        const data = await getAllRouteAcceptRequests();
-        console.log('Data --- > ', data);
-      } catch (error) {
-        console.error('Error fetching driver route data:', error);
-      }
-    };
-
     fetchDriverRouteData();
-    loadNotificationsFromStorage(); // Load notifications from storage
-    loadDisabledButtons(); // Load disabled buttons from storage
-  }, []);
-
-  useEffect(() => {
-    requestLocationPermission(); // Request location permissions
-  }, []);
-
-  useEffect(() => {
+    requestLocationPermission();
     fetchCustomCode();
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
+    loadDisabledButtons();
+  }, []);
 
-  /**
-   * Load Disabled Buttons from Storage
-   */
   const loadDisabledButtons = async () => {
     try {
       const disabledButtonsString = await AsyncStorage.getItem(
@@ -104,9 +76,6 @@ export default function NotificationScreen() {
     }
   };
 
-  /**
-   * Save Disabled Buttons to Storage
-   */
   const saveDisabledButtons = async (buttons: string[]) => {
     try {
       await AsyncStorage.setItem('disabledButtons', JSON.stringify(buttons));
@@ -115,47 +84,28 @@ export default function NotificationScreen() {
     }
   };
 
-  /**
-   * Load Notifications from Storage
-   */
-  const loadNotificationsFromStorage = async () => {
+  const fetchDriverRouteData = async () => {
     try {
-      const notificationsString = await AsyncStorage.getItem('notifications');
-      if (notificationsString) {
-        const storedNotifications = JSON.parse(notificationsString);
-        const filteredNotifications = filterNotifications(storedNotifications);
-        setNotifications(filteredNotifications);
+      const token = await messaging().getToken();
+      // const routes = await getDriverRouteData(token);
+      const routes = await getNotification();
+      if (routes.length > 0) {
+        const timestampedRoutes = routes.map((route: any) => ({
+          ...route,
+          createdAt: route.createdAt ? route.createdAt.toMillis() : null, // Convert Firestore Timestamp to milliseconds
+        }));
+        setRoutes(timestampedRoutes);
+        setNotifications(timestampedRoutes);
+        const latestRoute = routes[routes.length - 1];
+        setpickUpAddress(latestRoute?.pickUpCords?.pickUpAddress);
+        setdropAddress(latestRoute?.DestinationCords?.dropAddress);
       }
+      await getAllRouteAcceptRequests();
     } catch (error) {
-      console.error('Failed to load notifications from storage:', error);
+      console.error('Error fetching driver route data:', error);
     }
   };
 
-  /**
-   * Save Notifications to Storage
-   */
-  const saveNotificationsToStorage = async (notifications: any[]) => {
-    try {
-      const existingNotificationsString = await AsyncStorage.getItem(
-        'notifications',
-      );
-      let existingNotifications = [];
-      if (existingNotificationsString) {
-        existingNotifications = JSON.parse(existingNotificationsString);
-      }
-      const allNotifications = [...existingNotifications, ...notifications];
-      await AsyncStorage.setItem(
-        'notifications',
-        JSON.stringify(allNotifications),
-      );
-    } catch (error) {
-      console.error('Failed to save notifications to storage:', error);
-    }
-  };
-
-  /**
-   * Request Location Permission
-   */
   const requestLocationPermission = async () => {
     try {
       if (Platform.OS === 'android') {
@@ -170,7 +120,6 @@ export default function NotificationScreen() {
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Location permission granted');
           getUserLocation();
         } else {
           console.log('Location permission denied');
@@ -183,15 +132,11 @@ export default function NotificationScreen() {
     }
   };
 
-  /**
-   * Get User Location
-   */
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
-        console.log('🚀 ~ getUserLocation ~ position:', position);
         setUserLocation(position?.coords);
-        setLocation(position); // Update location state
+        setLocation(position);
       },
       error => {
         console.log(error.code, error.message);
@@ -202,14 +147,14 @@ export default function NotificationScreen() {
 
   const fetchCustomCode = async () => {
     const db = getFirestore(app);
-    const userId = user?.user?.email; // Assuming email is unique and used as a user ID
+    const userId = user?.user?.email;
     const userDoc = doc(db, 'userClicks', userId);
 
     try {
       const docSnap = await getDoc(userDoc);
       if (docSnap.exists() && docSnap.data().customCode) {
         const customCode = docSnap.data().customCode;
-        setCustomCode(customCode); // Set the custom code in the state
+        setCustomCode(customCode);
       } else {
         console.log('No custom code available.');
       }
@@ -219,7 +164,9 @@ export default function NotificationScreen() {
   };
 
   const handleYesPress = async (routeId: string) => {
-    if (disabledButtons.includes(routeId)) return; // Prevent multiple clicks
+    if (disabledButtons.includes(routeId)) {
+      return;
+    }
 
     try {
       const db = getFirestore(app);
@@ -227,12 +174,11 @@ export default function NotificationScreen() {
       const userId = user?.user?.email;
       const userDoc = doc(db, 'userClicks', userId);
 
-      // Call the RideAccept function
       if (user?.user?.name && token && userLocation) {
         await RideAccept(user?.user?.name, token, userLocation).then(() => {
           Alert.alert('Driver is on his way!');
-          setDisabledButtons([...disabledButtons, routeId]); // Disable "Yes" button for this route
-          saveDisabledButtons([...disabledButtons, routeId]); // Persist disabled buttons to storage
+          setDisabledButtons([...disabledButtons, routeId]);
+          saveDisabledButtons([...disabledButtons, routeId]);
         });
 
         try {
@@ -247,17 +193,16 @@ export default function NotificationScreen() {
             } else if (count === 11) {
               const customCode = generateCustomCode();
               await updateDoc(userDoc, {clickCount: 1, customCode: customCode});
-              setCustomCode(customCode); // Update the custom code state
-              count = 1; // Reset count
+              setCustomCode(customCode);
+              count = 1;
             }
           } else {
-            count = 1; // Initialize the count
+            count = 1;
             await setDoc(userDoc, {clickCount: count});
           }
 
-          // Update local state
           setClickCounts(count);
-          setShowPopup(true); // Show the popup automatically after button press
+          setShowPopup(true);
         } catch (error) {
           console.error('Error on updating click count: ', error);
         }
@@ -267,9 +212,8 @@ export default function NotificationScreen() {
     }
   };
 
-  // Function to generate a custom code
   const generateCustomCode = () => {
-    return Math.random().toString(36).substr(2, 9); // Example of generating a simple code
+    return Math.random().toString(36).substr(2, 9);
   };
 
   const PopupModal = () => (
@@ -299,74 +243,50 @@ export default function NotificationScreen() {
     </Modal>
   );
 
-  // Add Draggable Icon to the UI
   const DraggableIcon = () => (
     <Draggable
-      x={-10} // X position on screen
-      y={50} // Y position on screen
-      renderColor="red" // Color of the draggable component
-      // renderShape="circle" // Shape of the draggable component
-      onShortPressRelease={() => setShowPopup(true)} // Show the popup on click
-      renderText="🍦" // Emoji as an icon
+      x={-10}
+      y={50}
+      renderColor="red"
+      onShortPressRelease={() => setShowPopup(true)}
+      renderText="🍦"
       isCircle
       renderSize={44}
     />
   );
 
-  // /**
-  //  * Filter Notifications
-  //  * This function filters out notifications older than 20 minutes.
-  //  */
-  // const filterNotifications = (notifications: any[]) => {
-  //   const now = new Date().getTime();
-  //   return notifications.filter(notification => {
-  //     return now - notification.createdAt <= 20 * 60 * 1000;
-  //   });
-  // };
-
-  /**
-   * Filter Notifications
-   * This function filters out notifications older than 12 hours.
-   */
   const filterNotifications = (notifications: any[]) => {
     const now = new Date().getTime();
-    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    const twelveHours = 12 * 60 * 60 * 1000;
     return notifications.filter(notification => {
-      return now - notification.createdAt <= twelveHours;
+      if (notification.createdAt) {
+        return now - notification.createdAt <= twelveHours;
+      }
+      return false;
     });
   };
 
-  // Render Item for FlatList
   const renderItem = ({item}: any) => (
     <View style={styles.notificationBox}>
-      {pickUpAddress && dropAddress && (
-        <>
-          <View style={styles.addressCard}>
-            <Icon name="location-sharp" size={24} color="#1565C0" />
-            <Text style={styles.addressText}>
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                }}>
-                Pickup :
-              </Text>{' '}
-              {pickUpAddress}
-            </Text>
-          </View>
-          <View style={styles.addressCard}>
-            <Icon name="location-sharp" size={24} color="#C62828" />
-            <Text style={styles.addressText}>
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                }}>
-                Drop :{' '}
+      {item.pickUpCords?.pickUpAddress &&
+        item.DestinationCords?.dropAddress && (
+          <>
+            <View style={styles.addressCard}>
+              <Icon name="location-sharp" size={24} color="#1565C0" />
+              <Text style={styles.addressText}>
+                <Text style={{fontWeight: 'bold'}}>Pickup :</Text>{' '}
+                {item.pickUpCords.pickUpAddress}
               </Text>
-              {dropAddress}
-            </Text>
-          </View>
-        </>
-      )}
+            </View>
+            <View style={styles.addressCard}>
+              <Icon name="location-sharp" size={24} color="#C62828" />
+              <Text style={styles.addressText}>
+                <Text style={{fontWeight: 'bold'}}>Drop :</Text>{' '}
+                {item.DestinationCords.dropAddress}
+              </Text>
+            </View>
+          </>
+        )}
 
       <View
         style={{
@@ -401,10 +321,12 @@ export default function NotificationScreen() {
         <FlatList
           data={filterNotifications(notifications)}
           renderItem={renderItem}
-          keyExtractor={(item: any) => item.driverId}
+          keyExtractor={(item: any) => item.id}
           style={styles.list}
         />
       </View>
+      {/* <DraggableIcon />
+      <PopupModal /> */}
     </SafeAreaView>
   );
 }
@@ -472,7 +394,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   buttonDisabled: {
-    backgroundColor: '#A5D6A7', // A different shade to indicate it's disabled
+    backgroundColor: '#A5D6A7',
   },
   list: {
     width: '100%',
@@ -481,7 +403,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background for modal overlay
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
     margin: 20,

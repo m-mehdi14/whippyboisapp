@@ -19,10 +19,7 @@ const DriverDetailScreen = () => {
         {/* Description */}
         <View>
           <Text style={styles.descriptionText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non
-            elit lectus. Ut in suscipit odio. Sed malesuada faucibus arcu, sit
-            amet faucibus nisl sagittis eget. Suspendisse pharetra vulputate
-            velit
+            Bringing Sweet Swirls and Smiles to Your Neighborhood!
           </Text>
         </View>
         {/* Button */}

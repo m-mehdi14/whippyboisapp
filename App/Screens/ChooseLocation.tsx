@@ -8,6 +8,7 @@ import CustomButton from '../Components/CustomButton';
 import {getAllFcmTokens} from '../../hooks/notificationService';
 import {getGeocode} from '../../hooks/getLocationName';
 import {ChooseLocationSaveCords} from '../../hooks/RouteFunctions';
+import {useCurrentUser} from '../../hooks/currentUser';
 
 export default function ChooseLocation(props: any) {
   const navigation = useNavigation();
@@ -15,6 +16,7 @@ export default function ChooseLocation(props: any) {
     pickUpCords: {},
     DestinationCords: {},
   });
+  const user: any = useCurrentUser();
   const {pickUpCords, DestinationCords} = state;
   // console.log('PickUp Location ---> ', pickUpCords);
   // console.log('Drop Location ----> ', DestinationCords);
@@ -84,7 +86,11 @@ export default function ChooseLocation(props: any) {
         setState(updatedState);
 
         // Save the coordinates to Firebase
-        await ChooseLocationSaveCords(pickUpCords, DestinationCords);
+        await ChooseLocationSaveCords(
+          pickUpCords,
+          DestinationCords,
+          user?.user?.userId,
+        );
 
         // After notification is sent successfully, pass the coordinates back
         props.route.params.getCordinates(updatedState);

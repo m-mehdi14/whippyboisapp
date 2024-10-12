@@ -38,6 +38,8 @@ export default function MapScreen() {
     longitudeDelta: 0.0421,
   };
   const user = useCurrentUser();
+  // console.log('User ----> ', user?.user?.userId);
+
   const [userLocation, setUserLocation] = useState<any>(defaultLocation);
   const [location, setLocation] = useState<any>(null);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -47,10 +49,11 @@ export default function MapScreen() {
   });
   const [selectedLanguage, setSelectedLanguage] = useState();
   const [routeRequests, setRouteRequests] = useState([]);
+  // console.log('🚀 ~ MapScreen ~ routeRequests:', routeRequests);
   const [routesData, setRoutesData] = useState([]);
   const mapRef = useRef(null);
-  console.log(location);
-  console.log('Route Data ---> ', routesData);
+  // console.log(location);
+  // console.log('Route Data ---> ', routesData);
 
   // console.log('Selected language  ---> ', selectedLanguage);
 
@@ -65,7 +68,8 @@ export default function MapScreen() {
     const fetchDriverRouteData = async () => {
       try {
         const token = await messaging().getToken();
-        const routes = await getDriverRouteData(token);
+
+        const routes = await getDriverRouteData(user?.user?.userId as any);
         setRoutesData(routes);
         if (routes.length > 0) {
           const latestRoute = routes[routes.length - 1];
@@ -89,11 +93,16 @@ export default function MapScreen() {
   }, []);
 
   useEffect(() => {
-    if (userLocation && cords.dropCords && routesData.length > 0) {
-      const distance = getDistance(userLocation, cords.dropCords);
+    if (userLocation && cords && routesData.length > 0) {
+      const loc2 = {
+        latitude: cords?.pickupCords?.latitude,
+        longitude: cords?.pickupCords?.longitude,
+      };
+      // const distance = getDistance(userLocation, cords.dropCords);
+      const distance = getDistance(userLocation, loc2);
       if (distance < 50) {
         routesData.forEach((route: any) => {
-          deleteRoutesByDriverId(route.driverId)
+          deleteRoutesByDriverId(user?.user?.userId)
             .then(() => {
               console.log(
                 'Routes successfully deleted due to proximity for driver ID:',
@@ -151,8 +160,8 @@ export default function MapScreen() {
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
-        console.log('🚀 ~ getUserLocation ~ position:', position);
-        console.log(position?.coords);
+        // console.log('🚀 ~ getUserLocation ~ position:', position);
+        // console.log(position?.coords);
         setUserLocation(position?.coords);
         setLocation(position);
       },
@@ -181,6 +190,7 @@ export default function MapScreen() {
     Geolocation.watchPosition(
       position => {
         const {latitude, longitude} = position.coords;
+        console.log('WATCH-USER-LOCATION --->', position.coords);
         setUserLocation({latitude, longitude});
         checkProximity({latitude, longitude});
       },
@@ -192,6 +202,7 @@ export default function MapScreen() {
   };
 
   const checkProximity = (currentLocation: any) => {
+    console.log('🚀 ~ checkProximity ~ currentLocation:', currentLocation);
     routeRequests.forEach((request): any => {
       const distance = getDistance(
         {

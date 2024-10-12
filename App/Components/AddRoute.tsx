@@ -14,7 +14,7 @@ const AddRoute = ({getData, cords}: AddRouteProps) => {
   // const insets = useSafeAreaInsets();
   const nav = useNavigation();
 
-  console.log('Cords Boolean', cords);
+  // console.log('Cords Boolean', cords);
 
   useEffect(() => {
     if (isFocused) {
@@ -38,7 +38,7 @@ const AddRoute = ({getData, cords}: AddRouteProps) => {
   };
 
   const fetchValues = (data: any) => {
-    console.log('Data ---> ', data);
+    // console.log('Data ---> ', data);
     // Send coordinates to Map Screen.
     getData(data);
   };

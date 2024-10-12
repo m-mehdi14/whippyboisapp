@@ -13,6 +13,7 @@ import HomeStackNav from './HomeStackNav';
 import AddPostScreen from '../Screens/AddPostScreen';
 import ProfileScreen from '../Screens/ProfileScreen';
 import messaging from '@react-native-firebase/messaging';
+import PreviousBookingsScreen from '../Screens/PreviousBookingsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -42,7 +43,7 @@ const linking: any = {
   prefixes: ['myapp://'],
   config: {
     screens: {
-      homenav: {
+      driverhome: {
         // Assuming "HomeStackNav" is accessed via "driverhome" tab
         screens: {
           home: 'home',
@@ -91,7 +92,7 @@ const linking: any = {
 export default function UserScreenStackNav() {
   const stack = createStackNavigator();
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking} fallback={<Text>Loading...</Text>}>
       <Tab.Navigator
         initialRouteName="homenav"
         screenOptions={{
@@ -156,6 +157,28 @@ export default function UserScreenStackNav() {
             tabBarIcon: ({color, size, focused}) => (
               <Icon
                 name="person-outline"
+                size={size}
+                color={focused ? 'black' : 'white'}
+                style={{
+                  backgroundColor: focused ? 'white' : 'black',
+                  borderRadius: 50,
+                  height: 45,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 10,
+                }}
+              />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="previousBooking"
+          component={PreviousBookingsScreen}
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({color, size, focused}) => (
+              <Icon
+                name="list"
                 size={size}
                 color={focused ? 'black' : 'white'}
                 style={{

@@ -5,7 +5,7 @@ import messaging from '@react-native-firebase/messaging';
 import {collection, getDocs, getFirestore} from 'firebase/firestore';
 import {PermissionsAndroid, Platform} from 'react-native';
 import {app} from './firebaseConfig';
-import {useCurrentUser} from './currentUser';
+// import {useCurrentUser} from './currentUser';
 
 export async function requestUserPermission() {
   if (Platform.OS === 'android' && Platform.Version >= 33) {
@@ -114,7 +114,8 @@ export const getAllFcmTokens = async (pickUp: string, drop: string) => {
     const res = await fetch(
       // 'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
       // 'https://whippybois-express.vercel.app/send-noti',
-      'https://whippybois-express.onrender.com/send-noti',
+      // 'https://whippybois-express.onrender.com/send-noti',
+      'https://whippy-bois-backend.onrender.com/send-noti',
       {
         method: 'POST',
         headers: {
@@ -165,7 +166,8 @@ export const DriverOnlineFunction = async (user: any) => {
     const res = await fetch(
       // 'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
       // 'https://whippybois-express.vercel.app/send-noti',
-      'https://whippybois-express.onrender.com/driver-online',
+      // 'https://whippybois-express.onrender.com/driver-online',
+      'https://whippy-bois-backend.onrender.com/driver-online',
       // 'https://aphid-driving-specially.ngrok-free.app/driver',
       {
         method: 'POST',
@@ -203,7 +205,8 @@ export const ChangeRouteNotify = async (pickUp: string, drop: string) => {
     const res = await fetch(
       // 'https://9b73-203-215-167-36.ngrok-free.app/send-noti',
       // 'https://whippybois-express.vercel.app/send-noti',
-      'https://whippybois-express.onrender.com/send-noti',
+      // 'https://whippybois-express.onrender.com/send-noti',
+      'https://whippy-bois-backend.onrender.com/send-noti',
       {
         method: 'POST',
         headers: {
@@ -230,7 +233,8 @@ export const SendNotifyDriverArrive = async (token: string) => {
     const res = await fetch(
       // 'https://9b73-203-215-167-36.ngrok-free.app/driver-arrive',
       // 'https://whippybois-express.vercel.app/driver-arrive',
-      'https://whippybois-express.onrender.com/driver-arrive',
+      // 'https://whippybois-express.onrender.com/driver-arrive',
+      'https://whippy-bois-backend.onrender.com/driver-arrive',
       {
         method: 'POST',
         headers: {

@@ -10,6 +10,7 @@ import {ChangeRouteNotify} from '../../hooks/notificationService';
 import {saveCoordinatesToFirebase} from '../../hooks/RouteFunctions';
 import {getGeocode} from '../../hooks/getLocationName';
 import {useNavigation} from '@react-navigation/native';
+import {useCurrentUser} from '../../hooks/currentUser';
 
 export default function ChangeRouteScreen(props: any) {
   const navigation = useNavigation();
@@ -18,6 +19,7 @@ export default function ChangeRouteScreen(props: any) {
     DestinationCords: {},
   });
   const {pickUpCords, DestinationCords} = state;
+  const user = useCurrentUser();
   // console.log('PickUp Location ---> ', pickUpCords);
   // console.log('Drop Location ----> ', DestinationCords);
   // const onDone = () => {
@@ -86,7 +88,11 @@ export default function ChangeRouteScreen(props: any) {
         setState(updatedState);
 
         // Save the coordinates to Firebase
-        await saveCoordinatesToFirebase(pickUpCords, DestinationCords);
+        await saveCoordinatesToFirebase(
+          pickUpCords,
+          DestinationCords,
+          user.user.userId,
+        );
 
         // After notification is sent successfully, pass the coordinates back
         props.route.params.getCordinates(updatedState);

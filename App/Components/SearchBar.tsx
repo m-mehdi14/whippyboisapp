@@ -13,7 +13,7 @@ const SearchBar = ({placeholder, style, fetchAddress}: SearchBarProps) => {
   const apiKey = 'AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE';
 
   const onPressAddress = (data: any, details: any) => {
-    console.log('Detaiks --> ', details);
+    // console.log('Detaiks --> ', details);
     const lat = details.geometry.location.lat;
     const lng = details.geometry.location.lng;
     fetchAddress(lat, lng);

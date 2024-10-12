@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
@@ -12,12 +13,15 @@ import {
 } from 'firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 import {app} from './firebaseConfig';
+import {useCurrentUser} from './currentUser';
 
 export const saveCoordinatesToFirebase = async (
   pickUpCords: any,
   DestinationCords: any,
+  userId: any,
 ) => {
   const db = getFirestore(app);
+
   const coordsCollection = collection(db, 'DriverRouteCoordinates'); // Name your collection
 
   const token = await messaging().getToken();
@@ -49,6 +53,7 @@ export const saveCoordinatesToFirebase = async (
       pickUpCords,
       DestinationCords,
       createdAt: new Date(),
+      userId: userId,
     });
     console.log('New document written with ID: ', docRef.id);
   } catch (e) {
@@ -59,6 +64,7 @@ export const saveCoordinatesToFirebase = async (
 export const ChooseLocationSaveCords = async (
   pickUpCords: any,
   DestinationCords: any,
+  userId: any,
 ) => {
   const db = getFirestore(app);
   const coordsCollection = collection(db, 'DriverRouteCoordinates'); // Name your collection
@@ -69,6 +75,7 @@ export const ChooseLocationSaveCords = async (
       pickUpCords,
       DestinationCords,
       createdAt: new Date(), // Add a timestamp if needed
+      userId: userId,
     });
     console.log('Document written with ID: ', docRef.id);
   } catch (e) {
@@ -76,13 +83,71 @@ export const ChooseLocationSaveCords = async (
   }
 };
 
+// export const getDriverRouteData = async (driverId?: string) => {
+//   const db = getFirestore(app);
+//   const coordsCollection = collection(db, 'DriverRouteCoordinates'); // Use your collection name
+//   // const driverRoutesQuery = query(
+//   //   coordsCollection,
+//   //   where('driverId', '==', driverId),
+//   // );
+
+//   try {
+//     const querySnapshot = await getDocs(coordsCollection);
+//     let routes: any = [];
+//     querySnapshot.forEach(doc => {
+//       // Construct an array of route data objects
+//       routes.push({
+//         id: doc.id,
+//         ...doc.data(),
+//       });
+//     });
+
+//     console.log('Fetched route data: ', routes);
+//     return routes; // Returns an array of route data objects
+//   } catch (error) {
+//     console.error('Error fetching route data: ', error);
+//     throw new Error('Unable to fetch route data');
+//   }
+// };
+
 export const getDriverRouteData = async (driverId?: string) => {
   const db = getFirestore(app);
   const coordsCollection = collection(db, 'DriverRouteCoordinates'); // Use your collection name
-  // const driverRoutesQuery = query(
-  //   coordsCollection,
-  //   where('driverId', '==', driverId),
-  // );
+
+  try {
+    // Use the 'where' clause to filter the documents based on the driverId
+    let driverRoutesQuery;
+    if (driverId) {
+      driverRoutesQuery = query(
+        coordsCollection,
+        where('userId', '==', driverId),
+      );
+    } else {
+      driverRoutesQuery = coordsCollection;
+    }
+
+    const querySnapshot = await getDocs(driverRoutesQuery);
+    let routes: any = [];
+    querySnapshot.forEach(doc => {
+      // Construct an array of route data objects
+      routes.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    console.log('Fetched route data: ', routes);
+    return routes; // Returns an array of route data objects
+  } catch (error) {
+    console.error('Error fetching route data: ', error);
+    throw new Error('Unable to fetch route data');
+  }
+};
+
+// this function will use for notification screen .
+export const getNotification = async () => {
+  const db = getFirestore(app);
+  const coordsCollection = collection(db, 'DriverRouteCoordinates'); // Use your collection name
 
   try {
     const querySnapshot = await getDocs(coordsCollection);

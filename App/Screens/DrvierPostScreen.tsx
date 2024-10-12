@@ -1,11 +1,21 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 
-import {View, Text, SafeAreaView, FlatList} from 'react-native';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {StyleSheet} from 'react-native';
-import {getBookingsDetails} from '../../hooks/getBookingsDetails';
+import {
+  getBookingsDetails,
+  updateBookingStatus,
+} from '../../hooks/getBookingsDetails';
+import {Alert} from 'react-native';
 
 export default function DriverPostScreen() {
   const insets = useSafeAreaInsets();
@@ -21,25 +31,66 @@ export default function DriverPostScreen() {
     fetchData();
   }, []);
 
+  // const handleBookingPress = async (bookingId: any) => {
+  //   try {
+  //     await updateBookingStatus(bookingId, 'Driver Contacting');
+  //     Alert.alert(
+  //       'Status Updated',
+  //       'Customer will be notified that you will contact them.',
+  //     );
+  //     // Refresh the booking list after updating the status
+  //     const res = await getBookingsDetails();
+  //     setBooking(res);
+  //   } catch (error) {
+  //     console.error('Error updating booking status:', error);
+  //     Alert.alert('Error', 'Failed to update booking status.');
+  //   }
+  // };
+
+  const handleBookingPress = async (bookingId: any) => {
+    try {
+      // Define a meaningful status message
+      const statusMessage =
+        'Your booking is being processed. A driver will contact you shortly';
+
+      await updateBookingStatus(bookingId, statusMessage);
+      Alert.alert(
+        'Status Updated',
+        'Customer will be notified that a driver will contact them shortly.',
+      );
+      // Refresh the booking list after updating the status
+      const res = await getBookingsDetails();
+      setBooking(res);
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+      Alert.alert('Error', 'Failed to update booking status.');
+    }
+  };
+
   const renderItem = ({item}: any) => (
-    <View style={styles.bookingContainer}>
-      <Text style={styles.bookingHeading}>Booking</Text>
-      <View style={styles.bookingDetails}>
-        <Text style={styles.bookingDetailText}>Name: {item.name}</Text>
-        <Text style={styles.bookingDetailText}>
-          Date: {item.booking.date.toDate().toDateString()}
-        </Text>
-        <Text style={styles.bookingDetailText}>
-          Time: {item.booking.date.toDate().toLocaleTimeString()}
-        </Text>
-        <Text style={styles.bookingDetailText}>
-          Number: {item.booking.number}
-        </Text>
-        <Text style={styles.bookingDetailText}>
-          Address: {item.booking.address}
-        </Text>
+    <TouchableOpacity onPress={() => handleBookingPress(item.id)}>
+      <View style={styles.bookingContainer}>
+        <Text style={styles.bookingHeading}>Booking</Text>
+        <View style={styles.bookingDetails}>
+          <Text style={styles.bookingDetailText}>Name: {item.name}</Text>
+          <Text style={styles.bookingDetailText}>
+            Date: {item.booking.date.toDate().toDateString()}
+          </Text>
+          <Text style={styles.bookingDetailText}>
+            Time: {item.booking.date.toDate().toLocaleTimeString()}
+          </Text>
+          <Text style={styles.bookingDetailText}>
+            Number: {item.booking.number}
+          </Text>
+          <Text style={styles.bookingDetailText}>
+            Address: {item.booking.address}
+          </Text>
+          <Text style={styles.bookingDetailText}>
+            Status: {item.booking.status || 'Pending'}
+          </Text>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

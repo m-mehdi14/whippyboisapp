@@ -50,7 +50,7 @@ export default function AddProductScreen() {
     };
     // You can also use as a promise without 'callback':
     const result = await launchImageLibrary(options);
-    console.log(result);
+    // console.log(result);
     setImage(result?.assets[0]?.uri as any);
   };
 

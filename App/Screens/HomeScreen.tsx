@@ -16,7 +16,7 @@ import LatestProducts from '../Components/Latest-Products';
 export default function HomeScreen({navigation}: any) {
   const [role, setrole] = useState('');
   const currentUser: any = useCurrentUser();
-  console.log('🚀 ~ HomeScreen ~ currentUser:', currentUser);
+  // console.log('🚀 ~ HomeScreen ~ currentUser:', currentUser);
   const [data, setdata] = useState([]);
   const [search, setSearch] = useState('');
   const [filteredData, setFilteredData] = useState([]);
@@ -52,7 +52,7 @@ export default function HomeScreen({navigation}: any) {
       console.error('Error fetching data:', error);
     }
   };
-  console.log('🚀 ~ HomeScreen ~ role:', role);
+  // console.log('🚀 ~ HomeScreen ~ role:', role);
 
   const headerRightButtons = () => (
     <View style={{flexDirection: 'row'}}>

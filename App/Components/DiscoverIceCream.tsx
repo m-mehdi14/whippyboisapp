@@ -6,7 +6,7 @@ import React from 'react';
 
 const DiscoverIceCream = ({data}: any) => {
   const image = data.filter((item: any) => item.titleValue === 'Product Six');
-  console.log(image);
+  // console.log(image);
 
   return (
     <View style={styles.container}>
