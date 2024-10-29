@@ -1,16 +1,17 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
-
-import {View, ScrollView} from 'react-native';
+import {View, ScrollView, StyleSheet, Dimensions} from 'react-native';
 import React, {useState} from 'react';
 import SearchBar from '../Components/SearchBar';
 import CustomButton from '../Components/CustomButton';
-import {StyleSheet} from 'react-native';
 import {ChangeRouteNotify} from '../../hooks/notificationService';
 import {saveCoordinatesToFirebase} from '../../hooks/RouteFunctions';
 import {getGeocode} from '../../hooks/getLocationName';
 import {useNavigation} from '@react-navigation/native';
 import {useCurrentUser} from '../../hooks/currentUser';
+
+const {width} = Dimensions.get('window');
+const isTablet = width >= 768; // Detect tablet screens
 
 export default function ChangeRouteScreen(props: any) {
   const navigation = useNavigation();
@@ -20,20 +21,9 @@ export default function ChangeRouteScreen(props: any) {
   });
   const {pickUpCords, DestinationCords} = state;
   const user = useCurrentUser();
-  // console.log('PickUp Location ---> ', pickUpCords);
-  // console.log('Drop Location ----> ', DestinationCords);
-  // const onDone = () => {
-  //   props.route.params.getCordinates({
-  //     pickUpCords,
-  //     DestinationCords,
-  //   });
-  //   navigation.goBack();
-  // };
 
   // Fetch PickUp cords
   const fetchAddressCords = async (lat: any, lng: any) => {
-    // console.log("Pick Up lat --->", lat);
-    // console.log("Pick Up Lng ---> ", lng);
     const addressName = await getGeocode(lat, lng);
     setState({
       ...state,
@@ -46,10 +36,7 @@ export default function ChangeRouteScreen(props: any) {
   };
 
   // Fetch drop location cords
-
   const fetchDropLocationCords = async (lat: any, lng: any) => {
-    // console.log("Drop lat --->", lat);
-    // console.log("Drop lng ---> ", lng);
     const addressName = await getGeocode(lat, lng);
     setState({
       ...state,
@@ -62,7 +49,6 @@ export default function ChangeRouteScreen(props: any) {
   };
 
   const onSearchPress = async () => {
-    // Check if we have both pickup and dropoff coordinates
     if (
       pickUpCords.latitude &&
       pickUpCords.longitude &&
@@ -70,7 +56,6 @@ export default function ChangeRouteScreen(props: any) {
       DestinationCords.longitude
     ) {
       try {
-        // Fetch the address names
         const pickUpAddress = await getGeocode(
           pickUpCords.latitude,
           pickUpCords.longitude,
@@ -80,25 +65,21 @@ export default function ChangeRouteScreen(props: any) {
           DestinationCords.longitude,
         );
 
-        // Update the state with the new addresses
         const updatedState = {
           pickUpCords: {...pickUpCords, pickUpAddress},
           DestinationCords: {...DestinationCords, dropAddress},
         };
         setState(updatedState);
 
-        // Save the coordinates to Firebase
         await saveCoordinatesToFirebase(
           pickUpCords,
           DestinationCords,
-          user.user.userId,
+          user?.user?.userId,
         );
 
-        // After notification is sent successfully, pass the coordinates back
         props.route.params.getCordinates(updatedState);
-        // Navigate back to the previous screen
         navigation.goBack();
-        // Now send the notification with the addresses
+
         await ChangeRouteNotify(pickUpAddress, dropAddress);
         console.log('Notification sent with pick up and drop off addresses.');
       } catch (error) {
@@ -113,65 +94,58 @@ export default function ChangeRouteScreen(props: any) {
 
   return (
     <View
-      style={{
-        padding: 15,
-        flex: 1,
-        width: '100%',
-        // marginTop: 20,
-        backgroundColor: '#ffffff',
-        // backgroundColor: '#bdbebf',
-        paddingTop: 30,
-      }}>
+      style={[
+        styles.container,
+        isTablet && styles.containerTablet, // Apply tablet-specific styles
+      ]}>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <View
-          style={{
-            marginBottom: 30,
-          }}>
-          {/* <AddressPicker /> */}
+        <View style={styles.searchBarContainer}>
           <SearchBar
             placeholder="Enter your pickup location ?"
-            style={{}}
+            style={styles.searchBar}
             fetchAddress={fetchAddressCords}
           />
         </View>
-        {/* Drop Location */}
-        <View
-          style={{
-            marginBottom: 30,
-          }}>
+        <View style={styles.searchBarContainer}>
           <SearchBar
             placeholder="Enter your drop location ?"
-            style={{}}
+            style={styles.searchBar}
             fetchAddress={fetchDropLocationCords}
           />
         </View>
 
-        {/* <CustomButton text="Search" style={styles.button} onPress={onDone} /> */}
         <CustomButton
           text="Search"
-          style={styles.button}
+          style={[styles.button, isTablet && styles.buttonTablet]} // Adjust button style for tablets
           onPress={onSearchPress}
         />
-
-        {/* <CustomButton
-          text="Send Notification"
-          style={styles.button}
-          onPress={() =>
-            getAllFcmTokens(pickUpCords.pickUpAddress, DestinationCords)
-          }
-        /> */}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 15,
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#ffffff',
+    paddingTop: 30,
+  },
+  containerTablet: {
+    padding: 30, // Increase padding for tablet screens
+  },
+  searchBarContainer: {
+    marginBottom: 30,
+  },
   searchBar: {
-    marginBottom: 20,
-    backgroundColor: '#ECECEC',
-    width: '90%', // Adjust the width as needed
+    // Add custom search bar styles if needed
   },
   button: {
-    width: '100%', // Adjust the width as needed
+    width: '100%',
+  },
+  buttonTablet: {
+    width: '80%', // Make button smaller on tablets
+    alignSelf: 'center', // Center button on tablets
   },
 });

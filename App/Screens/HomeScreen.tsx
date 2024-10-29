@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
-import {View, Text, SafeAreaView, StyleSheet} from 'react-native';
+import {View, Text, SafeAreaView, StyleSheet, Dimensions} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useCurrentUser} from '../../hooks/currentUser';
 import {getProducts} from '../../hooks/getProducts';
@@ -13,10 +13,12 @@ import RecommendedProducts from '../Components/Recommended-Product';
 import DiscoverIceCream from '../Components/DiscoverIceCream';
 import LatestProducts from '../Components/Latest-Products';
 
+const {width} = Dimensions.get('window');
+const isTablet = width >= 768; // Define logic to detect if the device is a tablet
+
 export default function HomeScreen({navigation}: any) {
   const [role, setrole] = useState('');
   const currentUser: any = useCurrentUser();
-  // console.log('🚀 ~ HomeScreen ~ currentUser:', currentUser);
   const [data, setdata] = useState([]);
   const [search, setSearch] = useState('');
   const [filteredData, setFilteredData] = useState([]);
@@ -30,7 +32,6 @@ export default function HomeScreen({navigation}: any) {
 
   useEffect(() => {
     fetchData();
-
     // Clean up function
     return () => {
       // Any cleanup code can go here
@@ -52,7 +53,6 @@ export default function HomeScreen({navigation}: any) {
       console.error('Error fetching data:', error);
     }
   };
-  // console.log('🚀 ~ HomeScreen ~ role:', role);
 
   const headerRightButtons = () => (
     <View style={{flexDirection: 'row'}}>
@@ -60,7 +60,7 @@ export default function HomeScreen({navigation}: any) {
         <TouchableOpacity onPress={() => navigation.navigate('addproduct')}>
           <Icon
             name="clipboard"
-            size={24}
+            size={isTablet ? 32 : 24} // Increase icon size for tablet
             color={'black'}
             style={{marginRight: 15}}
           />
@@ -70,7 +70,7 @@ export default function HomeScreen({navigation}: any) {
         <TouchableOpacity onPress={() => navigation.navigate('notification')}>
           <Icon
             name="notifications"
-            size={24}
+            size={isTablet ? 32 : 24} // Increase icon size for tablet
             color="black"
             style={{marginRight: 15}}
           />
@@ -90,44 +90,36 @@ export default function HomeScreen({navigation}: any) {
       <ScrollView>
         {/* Heading */}
         <View
-          style={{
-            padding: 20,
-          }}>
+          style={[
+            styles.headerContainer,
+            isTablet && styles.headerContainerTablet,
+          ]}>
           <Text
-            style={{
-              fontSize: 30,
-              fontWeight: 'bold',
-              color: 'black',
-            }}>
+            style={[styles.headerText, isTablet && styles.headerTextTablet]}>
             Ice Cream Lover?
           </Text>
           <Text
-            style={{
-              fontSize: 30,
-              color: 'black',
-            }}>
+            style={[
+              styles.subHeaderText,
+              isTablet && styles.subHeaderTextTablet,
+            ]}>
             Order & Eat.
           </Text>
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchbar}>
+        <View style={[styles.searchbar, isTablet && styles.searchbarTablet]}>
           <TextInput
             placeholder="Search Your Icecream"
-            style={{color: 'black', fontSize: 16}}
+            style={[styles.searchInput, isTablet && styles.searchInputTablet]}
             placeholderTextColor={'#000'}
             onChangeText={setSearch}
             value={search}
           />
           <Icon
-            style={{
-              position: 'absolute',
-              right: 10,
-              top: 20,
-              color: 'black',
-            }}
+            style={styles.searchIcon}
             name="search"
-            size={25}
+            size={isTablet ? 30 : 25} // Larger search icon for tablets
             color="black"
           />
         </View>
@@ -139,7 +131,6 @@ export default function HomeScreen({navigation}: any) {
         <DiscoverIceCream data={data} />
 
         {/* Latest Product */}
-        {/* <LatestProducts data={data} /> */}
         <LatestProducts data={filteredData.length > 0 ? filteredData : data} />
       </ScrollView>
     </SafeAreaView>
@@ -151,6 +142,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     flex: 1,
   },
+  headerContainer: {
+    padding: 20,
+  },
+  headerContainerTablet: {
+    padding: 40, // Increase padding for tablet
+  },
+  headerText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  headerTextTablet: {
+    fontSize: 40, // Increase font size for tablets
+  },
+  subHeaderText: {
+    fontSize: 30,
+    color: 'black',
+  },
+  subHeaderTextTablet: {
+    fontSize: 40, // Increase font size for tablets
+  },
   searchbar: {
     borderWidth: 1,
     margin: 23,
@@ -158,8 +170,24 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     backgroundColor: '#EBEBEB',
-    // backgroundColor: 'white',
     width: '65%',
     color: '#000',
+  },
+  searchbarTablet: {
+    width: '50%', // Adjust width for tablets
+    padding: 15,
+  },
+  searchInput: {
+    color: 'black',
+    fontSize: 16,
+  },
+  searchInputTablet: {
+    fontSize: 20, // Larger text input for tablets
+  },
+  searchIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 20,
+    color: 'black',
   },
 });

@@ -1,32 +1,13 @@
 {
   "project_info": {
-    "project_number": "933572512945",
-    "project_id": "drive-app-expo",
-    "storage_bucket": "drive-app-expo.appspot.com"
+    "project_number": "269010315997",
+    "project_id": "whippybois-483df",
+    "storage_bucket": "whippybois-483df.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:933572512945:android:6a2cde0b16e83acf7e2690",
-        "android_client_info": {
-          "package_name": "com.mehdi555.app02passwordGenerative"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDRyaizwshMnFDK3jw48byyoGNqS8F1hS0"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:933572512945:android:db6295abae71ca937e2690",
+        "mobilesdk_app_id": "1:269010315997:android:583bc430f4ab8676a88934",
         "android_client_info": {
           "package_name": "com.whippyboisapp"
         }
@@ -34,45 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDRyaizwshMnFDK3jw48byyoGNqS8F1hS0"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:933572512945:android:9536c56b0f1bd0f07e2690",
-        "android_client_info": {
-          "package_name": "whippyBoisapp.app"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDRyaizwshMnFDK3jw48byyoGNqS8F1hS0"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:933572512945:android:86eef65b6bd1ea817e2690",
-        "android_client_info": {
-          "package_name": "whippyboisapp.app"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDRyaizwshMnFDK3jw48byyoGNqS8F1hS0"
+          "current_key": "AIzaSyAko2uC_g9WqvzOSXdYLf5pUeBczVtFE_o"
         }
       ],
       "services": {

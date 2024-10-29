@@ -8,11 +8,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useCurrentUser} from '../../hooks/currentUser';
 import {getBookingsByUserId} from '../../hooks/register-booking';
+
+const {width} = Dimensions.get('window');
+const isTablet = width >= 768; // Check if the device is a tablet
 
 export default function PreviousBookingsScreen() {
   const insets = useSafeAreaInsets();
@@ -56,20 +60,34 @@ export default function PreviousBookingsScreen() {
 
   return (
     <ScrollView style={[styles.container, {paddingTop: insets.top}]}>
-      <View style={styles.content}>
-        <Text style={styles.headingText}>Whippy Bois</Text>
-        <Text style={styles.subHeading}>Previous Bookings</Text>
+      <View style={[styles.content, isTablet && styles.contentTablet]}>
+        <Text
+          style={[styles.headingText, isTablet && styles.headingTextTablet]}>
+          Whippy Bois
+        </Text>
+        <Text style={[styles.subHeading, isTablet && styles.subHeadingTablet]}>
+          Previous Bookings
+        </Text>
 
         {fetchingBookings ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : bookings.length > 0 ? (
-          <View style={styles.bookingsContainer}>
+          <View
+            style={[
+              styles.bookingsContainer,
+              isTablet && styles.bookingsContainerTablet,
+            ]}>
             {bookings.map((booking: any, index) => (
-              <View key={index} style={styles.bookingItem}>
+              <View
+                key={index}
+                style={[
+                  styles.bookingItem,
+                  isTablet && styles.bookingItemTablet,
+                ]}>
                 <Text
                   style={
                     styles.bookingText
-                  }>{`Ice Creams: ${booking.booking?.quatity}`}</Text>
+                  }>{`Ice Creams: ${booking.booking?.quantity}`}</Text>
                 <Text style={styles.bookingText}>{`Date: ${formatDate(
                   booking.booking.date,
                 )}`}</Text>
@@ -91,7 +109,13 @@ export default function PreviousBookingsScreen() {
             ))}
           </View>
         ) : (
-          <Text style={styles.noBookingsText}>No bookings available</Text>
+          <Text
+            style={[
+              styles.noBookingsText,
+              isTablet && styles.noBookingsTextTablet,
+            ]}>
+            No bookings available
+          </Text>
         )}
       </View>
     </ScrollView>
@@ -108,11 +132,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  contentTablet: {
+    width: '80%', // Adjust content width for tablets
+  },
   headingText: {
     fontSize: 30,
     fontWeight: '600',
     color: '#000',
     marginTop: 20,
+  },
+  headingTextTablet: {
+    fontSize: 40, // Larger font for tablets
   },
   subHeading: {
     fontSize: 18,
@@ -120,9 +150,15 @@ const styles = StyleSheet.create({
     color: '#000',
     marginTop: 10,
   },
+  subHeadingTablet: {
+    fontSize: 24, // Larger font for tablets
+  },
   bookingsContainer: {
     marginTop: 20,
     width: '90%',
+  },
+  bookingsContainerTablet: {
+    width: '100%', // Wider container for tablets
   },
   bookingItem: {
     backgroundColor: '#f0f0f0',
@@ -130,6 +166,9 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
     width: '100%',
+  },
+  bookingItemTablet: {
+    padding: 20, // More padding for tablets
   },
   bookingText: {
     color: '#000',
@@ -139,5 +178,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#000',
     marginTop: 20,
+  },
+  noBookingsTextTablet: {
+    fontSize: 20, // Larger font for tablets
   },
 });

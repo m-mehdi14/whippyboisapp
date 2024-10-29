@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
-
 import {
   View,
   Text,
@@ -21,6 +20,10 @@ import Geolocation from '@react-native-community/geolocation';
 import {registerBooking} from '../../hooks/register-booking';
 import {TouchableOpacity} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {Dimensions} from 'react-native';
+
+const {width} = Dimensions.get('window');
+const isTablet = width >= 768; // Detecting if it's a tablet screen
 
 export default function AddPostScreen() {
   const insets = useSafeAreaInsets();
@@ -41,34 +44,10 @@ export default function AddPostScreen() {
     requestLocationPermission(); // Request location permissions
   }, []);
 
-  // useEffect(() => {
-  //   if (user && user.user && user.user.userId) {
-  //     fetchBookings(); // Fetch bookings once user is available
-  //   }
-  // }, [user]);
-
-  // const fetchBookings = async () => {
-  //   try {
-  //     const response = await getBookingsByUserId(user.user.userId);
-  //     console.log('Bookings response:', response);
-  //     if (response.success) {
-  //       setBookings(response.data);
-  //     } else {
-  //       Alert.alert('Error', response.error);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching bookings:', error);
-  //     Alert.alert('Error', 'Failed to fetch bookings.');
-  //   } finally {
-  //     setFetchingBookings(false);
-  //   }
-  // };
-
   const handleDateChange = (event: any, selectedDate: any) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
-      console.log('Selected date:', selectedDate); // Logging selected date
     }
   };
 
@@ -76,13 +55,9 @@ export default function AddPostScreen() {
     setShowTimePicker(false);
     if (selectedTime) {
       setTime(selectedTime);
-      console.log('Selected time:', selectedTime); // Logging selected time
     }
   };
 
-  /**
-   * Request Location Permission
-   */
   const requestLocationPermission = async () => {
     try {
       if (Platform.OS === 'android') {
@@ -97,10 +72,7 @@ export default function AddPostScreen() {
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Location permission granted');
           getUserLocation();
-        } else {
-          console.log('Location permission denied');
         }
       } else {
         getUserLocation();
@@ -110,13 +82,9 @@ export default function AddPostScreen() {
     }
   };
 
-  /**
-   * Get User Location
-   */
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       (position: any) => {
-        console.log(position?.coords);
         setUserLocation(position.coords);
         setLocation(position);
       },
@@ -127,9 +95,6 @@ export default function AddPostScreen() {
     );
   };
 
-  /**
-   * Register Your Booking
-   */
   const handleSubmitButton = async () => {
     if (!user || !user.user || !user?.user?.userId) {
       Alert.alert('Error', 'User is not available.');
@@ -140,15 +105,6 @@ export default function AddPostScreen() {
     let selectedDateTime = new Date(date);
     selectedDateTime.setHours(time.getHours());
     selectedDateTime.setMinutes(time.getMinutes());
-
-    console.log('Booking data:', {
-      quatity: quantity,
-      date: selectedDateTime,
-      number: number,
-      address: address,
-      location: location,
-      user: user,
-    }); // Logging booking data
 
     let response = await registerBooking({
       quatity: quantity,
@@ -173,7 +129,11 @@ export default function AddPostScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, {paddingTop: insets.top}]}
+      style={[
+        styles.container,
+        isTablet && styles.tabletContainer,
+        {paddingTop: insets.top},
+      ]}
       behavior="padding"
       keyboardVerticalOffset={Platform.select({ios: 0, android: 25})}>
       <ScrollView>
@@ -190,17 +150,19 @@ export default function AddPostScreen() {
               value={quantity}
               onChangeText={setQuantity}
             />
-            {/* Date & Time */}
+
             <TouchableOpacity
               style={styles.dateTimeContainer}
               onPress={() => setShowDatePicker(true)}>
               <Text style={styles.dateTimeText}>Select Date</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.dateTimeContainer}
               onPress={() => setShowTimePicker(true)}>
               <Text style={styles.dateTimeText}>Select Time</Text>
             </TouchableOpacity>
+
             {showDatePicker && (
               <DateTimePicker
                 testID="datePicker"
@@ -222,7 +184,6 @@ export default function AddPostScreen() {
               />
             )}
 
-            {/* Show Date and time */}
             <View style={styles.displayDateTimeContainer}>
               <Text style={styles.displayDateTimeText}>
                 {date.toDateString()}
@@ -232,7 +193,6 @@ export default function AddPostScreen() {
               </Text>
             </View>
 
-            {/* Contact Number */}
             <TextInput
               style={styles.input}
               placeholder="Contact Number?"
@@ -242,7 +202,6 @@ export default function AddPostScreen() {
               onChangeText={setNumber}
             />
 
-            {/* Address */}
             <TextInput
               style={[styles.input, styles.addressInput]}
               multiline={true}
@@ -252,7 +211,6 @@ export default function AddPostScreen() {
               onChangeText={setAddress}
             />
 
-            {/* Submit Button */}
             <TouchableOpacity
               disabled={isLoading}
               onPress={handleSubmitButton}
@@ -275,6 +233,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     flex: 1,
   },
+  tabletContainer: {
+    paddingHorizontal: 50, // Added padding for tablet
+  },
   content: {
     flex: 1,
     marginTop: 35,
@@ -295,7 +256,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#737373',
     height: 59,
-    width: 298,
+    width: '90%',
+    maxWidth: 400,
     marginTop: 20,
     borderRadius: 10,
     padding: 10,
@@ -310,7 +272,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#737373',
     height: 59,
-    width: 298,
+    width: '90%',
+    maxWidth: 400,
     marginTop: 20,
     borderRadius: 10,
     justifyContent: 'center',
@@ -318,16 +281,12 @@ const styles = StyleSheet.create({
   dateTimeText: {
     color: '#fff',
   },
-  verticalLine: {
-    height: '100%',
-    width: 1,
-    backgroundColor: '#000',
-  },
   displayDateTimeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#737373',
-    width: 298,
+    width: '90%',
+    maxWidth: 400,
     marginTop: 20,
     borderRadius: 10,
     justifyContent: 'space-between',
@@ -352,6 +311,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     borderColor: '#000',
+    width: '90%',
+    maxWidth: 400,
   },
   submitButtonText: {
     fontSize: 15,

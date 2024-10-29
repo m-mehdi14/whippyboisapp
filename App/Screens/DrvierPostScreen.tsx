@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
+  Dimensions,
+  Alert,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -15,7 +17,9 @@ import {
   getBookingsDetails,
   updateBookingStatus,
 } from '../../hooks/getBookingsDetails';
-import {Alert} from 'react-native';
+
+const {width} = Dimensions.get('window');
+const isTablet = width >= 768; // Detect tablet screen
 
 export default function DriverPostScreen() {
   const insets = useSafeAreaInsets();
@@ -30,22 +34,6 @@ export default function DriverPostScreen() {
 
     fetchData();
   }, []);
-
-  // const handleBookingPress = async (bookingId: any) => {
-  //   try {
-  //     await updateBookingStatus(bookingId, 'Driver Contacting');
-  //     Alert.alert(
-  //       'Status Updated',
-  //       'Customer will be notified that you will contact them.',
-  //     );
-  //     // Refresh the booking list after updating the status
-  //     const res = await getBookingsDetails();
-  //     setBooking(res);
-  //   } catch (error) {
-  //     console.error('Error updating booking status:', error);
-  //     Alert.alert('Error', 'Failed to update booking status.');
-  //   }
-  // };
 
   const handleBookingPress = async (bookingId: any) => {
     try {
@@ -69,23 +57,63 @@ export default function DriverPostScreen() {
 
   const renderItem = ({item}: any) => (
     <TouchableOpacity onPress={() => handleBookingPress(item.id)}>
-      <View style={styles.bookingContainer}>
-        <Text style={styles.bookingHeading}>Booking</Text>
-        <View style={styles.bookingDetails}>
-          <Text style={styles.bookingDetailText}>Name: {item.name}</Text>
-          <Text style={styles.bookingDetailText}>
+      <View
+        style={[
+          styles.bookingContainer,
+          isTablet && styles.bookingContainerTablet,
+        ]}>
+        <Text
+          style={[
+            styles.bookingHeading,
+            isTablet && styles.bookingHeadingTablet,
+          ]}>
+          Booking
+        </Text>
+        <View
+          style={[
+            styles.bookingDetails,
+            isTablet && styles.bookingDetailsTablet,
+          ]}>
+          <Text
+            style={[
+              styles.bookingDetailText,
+              isTablet && styles.bookingDetailTextTablet,
+            ]}>
+            Name: {item.name}
+          </Text>
+          <Text
+            style={[
+              styles.bookingDetailText,
+              isTablet && styles.bookingDetailTextTablet,
+            ]}>
             Date: {item.booking.date.toDate().toDateString()}
           </Text>
-          <Text style={styles.bookingDetailText}>
+          <Text
+            style={[
+              styles.bookingDetailText,
+              isTablet && styles.bookingDetailTextTablet,
+            ]}>
             Time: {item.booking.date.toDate().toLocaleTimeString()}
           </Text>
-          <Text style={styles.bookingDetailText}>
+          <Text
+            style={[
+              styles.bookingDetailText,
+              isTablet && styles.bookingDetailTextTablet,
+            ]}>
             Number: {item.booking.number}
           </Text>
-          <Text style={styles.bookingDetailText}>
+          <Text
+            style={[
+              styles.bookingDetailText,
+              isTablet && styles.bookingDetailTextTablet,
+            ]}>
             Address: {item.booking.address}
           </Text>
-          <Text style={styles.bookingDetailText}>
+          <Text
+            style={[
+              styles.bookingDetailText,
+              isTablet && styles.bookingDetailTextTablet,
+            ]}>
             Status: {item.booking.status || 'Pending'}
           </Text>
         </View>
@@ -97,11 +125,23 @@ export default function DriverPostScreen() {
     <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.content}>
         <View style={{width: '100%', alignItems: 'center'}}>
-          <Text style={styles.headingText}>Whippy Bois</Text>
-          <Text style={styles.subHeading}>Bookings</Text>
+          <Text
+            style={[styles.headingText, isTablet && styles.headingTextTablet]}>
+            Whippy Bois
+          </Text>
+          <Text
+            style={[styles.subHeading, isTablet && styles.subHeadingTablet]}>
+            Bookings
+          </Text>
         </View>
         {booking?.length === 0 ? (
-          <Text style={styles.noBookingText}>No booking available</Text>
+          <Text
+            style={[
+              styles.noBookingText,
+              isTablet && styles.noBookingTextTablet,
+            ]}>
+            No booking available
+          </Text>
         ) : (
           <FlatList
             data={booking}
@@ -133,12 +173,18 @@ const styles = StyleSheet.create({
     color: '#000',
     alignItems: 'center',
   },
+  headingTextTablet: {
+    fontSize: 40, // Larger font size for tablet
+  },
   subHeading: {
     fontSize: 16,
     fontWeight: '500',
     marginTop: 20,
     color: '#000',
     alignItems: 'center',
+  },
+  subHeadingTablet: {
+    fontSize: 24, // Larger font size for tablet
   },
   bookingContainer: {
     backgroundColor: '#FFC300',
@@ -148,21 +194,33 @@ const styles = StyleSheet.create({
     width: '100%',
     marginHorizontal: 10,
   },
+  bookingContainerTablet: {
+    padding: 25, // Larger padding for tablet
+  },
   bookingHeading: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#000',
   },
+  bookingHeadingTablet: {
+    fontSize: 26, // Larger font size for tablet
+  },
   bookingDetails: {
     backgroundColor: '#FFF',
     borderRadius: 10,
     padding: 10,
   },
+  bookingDetailsTablet: {
+    padding: 20, // Larger padding for tablet
+  },
   bookingDetailText: {
     fontSize: 16,
     marginBottom: 5,
     color: '#000',
+  },
+  bookingDetailTextTablet: {
+    fontSize: 22, // Larger font size for tablet
   },
   flatListContent: {
     paddingHorizontal: 20,
@@ -175,5 +233,8 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
     marginTop: 20,
+  },
+  noBookingTextTablet: {
+    fontSize: 24, // Larger font size for tablet
   },
 });

@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import Geolocation from '@react-native-community/geolocation';
@@ -30,6 +31,9 @@ import {
 } from '../../hooks/notificationService';
 import {useCurrentUser} from '../../hooks/currentUser';
 
+const {width, height} = Dimensions.get('window');
+const isTablet = width >= 768; // Tablet screen detection
+
 export default function MapScreen() {
   const defaultLocation = {
     latitude: 40.7128,
@@ -38,7 +42,6 @@ export default function MapScreen() {
     longitudeDelta: 0.0421,
   };
   const user = useCurrentUser();
-  // console.log('User ----> ', user?.user?.userId);
 
   const [userLocation, setUserLocation] = useState<any>(defaultLocation);
   const [location, setLocation] = useState<any>(null);
@@ -49,13 +52,8 @@ export default function MapScreen() {
   });
   const [selectedLanguage, setSelectedLanguage] = useState();
   const [routeRequests, setRouteRequests] = useState([]);
-  // console.log('🚀 ~ MapScreen ~ routeRequests:', routeRequests);
   const [routesData, setRoutesData] = useState([]);
   const mapRef = useRef(null);
-  // console.log(location);
-  // console.log('Route Data ---> ', routesData);
-
-  // console.log('Selected language  ---> ', selectedLanguage);
 
   useEffect(() => {
     requestLocationPermission();
@@ -98,7 +96,6 @@ export default function MapScreen() {
         latitude: cords?.pickupCords?.latitude,
         longitude: cords?.pickupCords?.longitude,
       };
-      // const distance = getDistance(userLocation, cords.dropCords);
       const distance = getDistance(userLocation, loc2);
       if (distance < 50) {
         routesData.forEach((route: any) => {
@@ -160,8 +157,6 @@ export default function MapScreen() {
   const getUserLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
-        // console.log('🚀 ~ getUserLocation ~ position:', position);
-        // console.log(position?.coords);
         setUserLocation(position?.coords);
         setLocation(position);
       },
@@ -190,7 +185,6 @@ export default function MapScreen() {
     Geolocation.watchPosition(
       position => {
         const {latitude, longitude} = position.coords;
-        console.log('WATCH-USER-LOCATION --->', position.coords);
         setUserLocation({latitude, longitude});
         checkProximity({latitude, longitude});
       },
@@ -202,7 +196,6 @@ export default function MapScreen() {
   };
 
   const checkProximity = (currentLocation: any) => {
-    console.log('🚀 ~ checkProximity ~ currentLocation:', currentLocation);
     routeRequests.forEach((request): any => {
       const distance = getDistance(
         {
@@ -248,14 +241,11 @@ export default function MapScreen() {
   if (!userLocation) {
     return (
       <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        <View>
-          <ActivityIndicator size="large" />
-        </View>
+        style={[
+          styles.loadingContainer,
+          isTablet && styles.loadingContainerTablet,
+        ]}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -263,25 +253,15 @@ export default function MapScreen() {
   return (
     <View style={styles.container}>
       <View
-        style={{
-          position: 'absolute',
-          top: 70,
-          zIndex: 20,
-          right: 20,
-        }}>
+        style={[
+          styles.menuButtonContainer,
+          isTablet && styles.menuButtonContainerTablet,
+        ]}>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Icon
             name="more-horizontal"
-            size={20}
-            style={{
-              color: 'white',
-              backgroundColor: 'black',
-              padding: 4,
-              borderRadius: 50,
-              elevation: 0,
-              shadowOpacity: 0,
-              shadowRadius: 0,
-            }}
+            size={isTablet ? 30 : 20} // Larger icon size for tablets
+            style={[styles.menuButton, isTablet && styles.menuButtonTablet]}
           />
         </TouchableOpacity>
       </View>
@@ -337,9 +317,9 @@ export default function MapScreen() {
             <MapViewDirections
               origin={cords?.pickupCords}
               destination={cords?.dropCords}
-              strokeWidth={3}
+              strokeWidth={isTablet ? 5 : 3} // Adjust stroke width for tablets
               strokeColor="blue"
-              apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
+              apikey="YOUR_GOOGLE_MAPS_API_KEY"
               optimizeWaypoints={true}
               onReady={result => {
                 if (cords.pickupCords && cords.dropCords) {
@@ -359,36 +339,6 @@ export default function MapScreen() {
             />
           </>
         )}
-        {/* {routesData?.map((route: any, index: any) => (
-          <MapViewDirections
-            key={index}
-            origin={{
-              latitude: route.pickUpCords.latitude,
-              longitude: route.pickUpCords.longitude,
-            }}
-            destination={{
-              latitude: route.DestinationCords.latitude,
-              longitude: route.DestinationCords.longitude,
-            }}
-            strokeWidth={3}
-            strokeColor="blue"
-            apikey="AIzaSyBuzqzsIcuhUYAovZzlaj8ANGsKNk6ZTgE"
-            optimizeWaypoints={true}
-            onReady={result => {
-              mapRef?.current?.fitToCoordinates(result.coordinates, {
-                edgePadding: {
-                  right: 30,
-                  bottom: 300,
-                  left: 30,
-                  top: 100,
-                },
-              });
-            }}
-            onError={errorMessage => {
-              console.log('GMAPS route request error:', errorMessage);
-            }}
-          />
-        ))} */}
       </MapView>
 
       <View style={styles.flexView}>
@@ -409,48 +359,34 @@ export default function MapScreen() {
             <View style={styles.center}>
               <View style={styles.barIcon} />
               <View
-                style={{
-                  marginTop: 30,
-                  width: '100%',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}>
-                <View style={{}}>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: '500',
-                      color: '#000',
-                    }}>
-                    Set Status
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    width: '100%',
-                  }}>
-                  <Picker
-                    selectedValue={selectedLanguage}
-                    onValueChange={(itemValue, itemIndex) =>
-                      setSelectedLanguage(itemValue)
-                    }
-                    dropdownIconColor={'#000'}>
-                    <Picker.Item
-                      label="Offline"
-                      value="offline"
-                      style={{
-                        color: 'red',
-                      }}
-                    />
-                    <Picker.Item
-                      label="Online"
-                      value="online"
-                      style={{
-                        color: 'green',
-                      }}
-                    />
-                  </Picker>
-                </View>
+                style={[
+                  styles.modalHeader,
+                  isTablet && styles.modalHeaderTablet,
+                ]}>
+                <Text
+                  style={[
+                    styles.modalTitle,
+                    isTablet && styles.modalTitleTablet,
+                  ]}>
+                  Set Status
+                </Text>
+                <Picker
+                  selectedValue={selectedLanguage}
+                  onValueChange={(itemValue, itemIndex) =>
+                    setSelectedLanguage(itemValue)
+                  }
+                  dropdownIconColor={'#000'}>
+                  <Picker.Item
+                    label="Offline"
+                    value="offline"
+                    style={styles.pickerItem}
+                  />
+                  <Picker.Item
+                    label="Online"
+                    value="online"
+                    style={styles.pickerItem}
+                  />
+                </Picker>
               </View>
 
               <AddRoute
@@ -474,44 +410,31 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  formContainer: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContainerTablet: {
+    padding: 50,
+  },
+  menuButtonContainer: {
     position: 'absolute',
-    top: 20,
-    left: 10,
-    right: 10,
-    backgroundColor: '#fff',
+    top: 70,
+    zIndex: 20,
+    right: 20,
+  },
+  menuButtonContainerTablet: {
+    top: 40,
+  },
+  menuButton: {
+    color: 'white',
+    backgroundColor: 'black',
+    padding: 4,
+    borderRadius: 50,
+  },
+  menuButtonTablet: {
     padding: 10,
-    borderRadius: 10,
-    elevation: 4,
-  },
-  input: {
-    borderBottomWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 10,
-    padding: 8,
-  },
-  button: {
-    backgroundColor: 'blue',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  sheetContainer: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: 'blue',
-  },
-  sheetContent: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   flexView: {
     flex: 1,
@@ -531,6 +454,23 @@ const styles = StyleSheet.create({
     minHeight: 300,
     paddingBottom: 20,
   },
+  modalHeader: {
+    marginTop: 30,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalHeaderTablet: {
+    marginTop: 50,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000',
+  },
+  modalTitleTablet: {
+    fontSize: 22,
+  },
   center: {
     display: 'flex',
     alignItems: 'center',
@@ -542,9 +482,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#000',
   },
-  text: {
-    color: '#bbb',
-    fontSize: 34,
-    marginTop: 100,
+  pickerItem: {
+    fontSize: 16,
+    color: '#000',
   },
 });

@@ -11,6 +11,7 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
@@ -19,6 +20,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {registerUser} from '../../hooks/register';
 import {signOut} from 'firebase/auth';
 import {auth} from '../../hooks/firebaseConfig';
+
+const {width} = Dimensions.get('window');
+const isTablet = width >= 768; // Detect tablet screen
 
 const CustomerSignUpScreen = () => {
   const navigation = useNavigation();
@@ -31,22 +35,22 @@ const CustomerSignUpScreen = () => {
   const [showConfirmPassword, setshowConfirmPassword] = useState(false);
   const [isloading, setisloading] = useState(false);
 
-  let matchedPassword = password === confirmPassword;
+  const matchedPassword = password === confirmPassword;
+
   const handleSubmitButton = async () => {
     setisloading(true);
     let response = await registerUser(name, email, confirmPassword, 'customer');
-    console.log('Customer Signup Response ----->', response);
     setisloading(false);
+
     if (response.success) {
-      // Alert.alert("Sign up", response.success);
       ToastAndroid.show(response?.success, ToastAndroid.SHORT);
       await signOut(auth);
       //@ts-ignore
       navigation.navigate('customerlogin');
-    }
-    if (!response.success) {
+    } else {
       Alert.alert('Sign up', response.error);
     }
+
     setEmail('');
     setname('');
     setpassword('');
@@ -54,165 +58,114 @@ const CustomerSignUpScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[
-        {
-          flex: 1,
-        },
-        styles.container,
-      ]}
-      // behavior={Platform.OS === "ios" ? "padding" : "height"}
-      // keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
-    >
-      <SafeAreaView
-        style={[
-          styles.container,
-          {paddingTop: insets.top, backgroundColor: '#E4E4E4'},
-        ]}>
+    <KeyboardAvoidingView style={[styles.container, {flex: 1}]}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}]}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Main DIV */}
           <View style={styles.content}>
-            {/* Title Text */}
-            <Text style={styles.titleText}>WHIPPY BOIS</Text>
-            {/* Question Text */}
-            <Text style={styles.questionText}>Create Customer Account</Text>
+            <Text
+              style={[styles.titleText, isTablet && styles.titleTextTablet]}>
+              WHIPPY BOIS
+            </Text>
 
-            {/* form */}
+            <Text
+              style={[
+                styles.questionText,
+                isTablet && styles.questionTextTablet,
+              ]}>
+              Create Customer Account
+            </Text>
+
             <View style={styles.formContent}>
-              {/* Email */}
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, isTablet && styles.textInputTablet]}
                 placeholder="Email"
-                onChangeText={e => setEmail(e)}
+                onChangeText={setEmail}
                 value={email}
                 placeholderTextColor={'#000'}
               />
-              {/* Name */}
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, isTablet && styles.textInputTablet]}
                 placeholder="Name"
-                onChangeText={e => setname(e)}
+                onChangeText={setname}
                 value={name}
                 placeholderTextColor={'#000'}
               />
-              {/* Create Password */}
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, isTablet && styles.textInputTablet]}
                 placeholder="Create Password"
                 secureTextEntry={!showPassword}
-                onChangeText={e => setpassword(e)}
+                onChangeText={setpassword}
                 value={password}
                 placeholderTextColor={'#000'}
               />
-              {/* Re - Enter Password */}
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, isTablet && styles.textInputTablet]}
                 placeholder="Re-Enter Password"
                 secureTextEntry={!showConfirmPassword}
-                onChangeText={e => setconfirmPassword(e)}
+                onChangeText={setconfirmPassword}
                 value={confirmPassword}
                 placeholderTextColor={'#000'}
               />
 
-              {/* Show Password Button */}
               <TouchableOpacity
-                style={{
-                  alignSelf: 'flex-end',
-                  marginTop: 0,
-                  marginLeft: 'auto',
-                  marginRight: 15,
-                  position: 'absolute',
-                  top: '45%',
-                  right: 1,
-                  bottom: -3,
-                }}
+                style={[
+                  styles.eyeIcon,
+                  {top: '45%'},
+                  isTablet && styles.eyeIconTablet,
+                ]}
                 onPress={() => setShowPassword(!showPassword)}>
-                <Text style={{color: '#0066FF'}}>
-                  {/* {showPassword ? "Hide Password" : "Show Password"} */}
-                  {showPassword ? (
-                    <Icon name="eye" size={24} color="black" />
-                  ) : (
-                    <Icon name="eye-off" size={24} color="black" />
-                  )}
-                </Text>
+                <Icon
+                  name={showPassword ? 'eye' : 'eye-off'}
+                  size={24}
+                  color="black"
+                />
               </TouchableOpacity>
 
-              {/* Show Confirm Password Button */}
               <TouchableOpacity
-                style={{
-                  alignSelf: 'flex-end',
-                  marginTop: 0,
-                  marginLeft: 'auto',
-                  marginRight: 15,
-                  position: 'absolute',
-                  top: '62%',
-                  right: 1,
-                  bottom: -3,
-                }}
+                style={[
+                  styles.eyeIcon,
+                  {top: '62%'},
+                  isTablet && styles.eyeIconTablet,
+                ]}
                 onPress={() => setshowConfirmPassword(!showConfirmPassword)}>
-                <Text style={{color: '#0066FF'}}>
-                  {/* {showPassword ? "Hide Password" : "Show Password"} */}
-                  {showConfirmPassword ? (
-                    <Icon name="eye" size={24} color="black" />
-                  ) : (
-                    <Icon name="eye-off" size={24} color="black" />
-                  )}
-                </Text>
+                <Icon
+                  name={showConfirmPassword ? 'eye' : 'eye-off'}
+                  size={24}
+                  color="black"
+                />
               </TouchableOpacity>
 
-              {/* Login Button */}
               <TouchableOpacity
-                style={{
-                  alignSelf: 'flex-end', // Align the button to the right
-                  marginTop: 12,
-                  marginLeft: 'auto', // Move to the rightmost position
-                  marginRight: 10, // Add some spacing
-                  // color: "#0066FF",
-                }}
+                style={[styles.loginLink, isTablet && styles.loginLinkTablet]}
                 //@ts-ignore
                 onPress={() => navigation.navigate('customerlogin')}>
                 <Text
-                  style={{
-                    color: '#0066FF',
-                    fontSize: 16,
-                    textDecorationLine: 'underline',
-                    fontWeight: 'bold',
-                  }}>
+                  style={[
+                    styles.loginText,
+                    isTablet && styles.loginTextTablet,
+                  ]}>
                   Login
                 </Text>
               </TouchableOpacity>
-              {/* Login Button */}
 
-              {/* Submit Button */}
-              <View
-                style={{
-                  marginTop: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+              <View style={styles.submitButtonContainer}>
                 <TouchableOpacity
-                  style={{
-                    backgroundColor: '#0066FF',
-                    padding: 12,
-                    borderRadius: 10,
-                    width: 140,
-                  }}
+                  style={[
+                    styles.submitButton,
+                    isTablet && styles.submitButtonTablet,
+                  ]}
                   disabled={isloading || !matchedPassword}
-                  onPress={handleSubmitButton} // Call the handleSubmitButton function when the button is pressed
-                >
+                  onPress={handleSubmitButton}>
                   <Text
-                    style={{
-                      color: '#ffffff',
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      textAlign: 'center',
-                    }}>
+                    style={[
+                      styles.submitButtonText,
+                      isTablet && styles.submitButtonTextTablet,
+                    ]}>
                     Sign Up
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-            {/* form */}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -227,7 +180,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#E4E4E4',
     alignItems: 'center',
-    // justifyContent: "center",
   },
   content: {
     alignItems: 'center',
@@ -235,32 +187,88 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 72,
-    color: '#FF0000', // Assuming this is the color for the text
+    color: '#FF0000',
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 50,
   },
+  titleTextTablet: {
+    fontSize: 96, // Larger font size for tablets
+  },
+  questionText: {
+    fontSize: 20,
+    color: '#000',
+    marginVertical: 10,
+    textTransform: 'capitalize',
+  },
+  questionTextTablet: {
+    fontSize: 26, // Larger font size for tablets
+  },
   formContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#000',
   },
   textInput: {
     borderRadius: 10,
     height: 45,
     width: 300,
-    // backgroundColor: "#BCBCBC",
-    // backgroundColor: '#ECECEC',
     backgroundColor: 'white',
     marginTop: 15,
     padding: 12,
     fontSize: 16,
     color: '#000',
   },
-  questionText: {
-    fontSize: 20,
-    color: '#000000', // Assuming black for the question text
-    marginVertical: 10, // Space above and below the question
-    textTransform: 'capitalize',
+  textInputTablet: {
+    width: 400, // Larger width for tablets
+    height: 55,
+    fontSize: 18,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+  },
+  eyeIconTablet: {
+    right: 20, // Adjust icon position for tablets
+  },
+  loginLink: {
+    alignSelf: 'flex-end',
+    marginTop: 12,
+    marginRight: 10,
+  },
+  loginLinkTablet: {
+    marginRight: 20, // Adjust margin for tablets
+  },
+  loginText: {
+    color: '#0066FF',
+    fontSize: 16,
+    textDecorationLine: 'underline',
+    fontWeight: 'bold',
+  },
+  loginTextTablet: {
+    fontSize: 20, // Larger font size for tablets
+  },
+  submitButtonContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButton: {
+    backgroundColor: '#0066FF',
+    padding: 12,
+    borderRadius: 10,
+    width: 140,
+  },
+  submitButtonTablet: {
+    padding: 15, // Larger padding for tablets
+    width: 180,
+  },
+  submitButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  submitButtonTextTablet: {
+    fontSize: 18, // Larger font size for tablets
   },
 });

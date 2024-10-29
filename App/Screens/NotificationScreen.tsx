@@ -12,39 +12,29 @@ import {
   TouchableOpacity,
   Platform,
   PermissionsAndroid,
+  FlatList,
+  Alert,
+  Modal,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Dimensions} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import messaging from '@react-native-firebase/messaging';
-import {getDriverRouteData, getNotification} from '../../hooks/RouteFunctions';
+import {getNotification} from '../../hooks/RouteFunctions';
 import Geolocation from '@react-native-community/geolocation';
 import {RideAccept, getAllRouteAcceptRequests} from '../../hooks/RideAccept';
 import {useCurrentUser} from '../../hooks/currentUser';
-import {Alert} from 'react-native';
-import {FlatList} from 'react-native';
-import {
-  collection,
-  doc,
-  getDoc,
-  getFirestore,
-  setDoc,
-  updateDoc,
-  getDocs,
-  query,
-  where,
-  Timestamp,
-} from 'firebase/firestore';
-import {app} from '../../hooks/firebaseConfig';
-import {Modal} from 'react-native';
-import Draggable from 'react-native-draggable';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getFirestore, doc, getDoc, updateDoc, setDoc} from 'firebase/firestore';
+import {app} from '../../hooks/firebaseConfig';
+
+const {width, height} = Dimensions.get('window');
+const isTablet = width >= 768; // Check if the device is a tablet
 
 export default function NotificationScreen() {
   const [pickUpAddress, setpickUpAddress] = useState('');
   const [userLocation, setUserLocation] = useState<any>(null);
   const [routes, setRoutes] = useState([]); // State to store routes
-  const [location, setLocation] = useState<any>(null);
   const [dropAddress, setdropAddress] = useState('');
   const [pressCount, setPressCount] = useState(0); // State to track button presses
   const [showPopup, setShowPopup] = useState(false);
@@ -52,7 +42,6 @@ export default function NotificationScreen() {
   const [customCode, setCustomCode] = useState('');
   const [disabledButtons, setDisabledButtons] = useState<string[]>([]); // State to track disabled buttons
   const [notifications, setNotifications] = useState<any[]>([]); // State to store notifications with timestamps
-  console.log('Notifications ---- > ', notifications);
 
   const user: any = useCurrentUser();
 
@@ -87,7 +76,6 @@ export default function NotificationScreen() {
   const fetchDriverRouteData = async () => {
     try {
       const token = await messaging().getToken();
-      // const routes = await getDriverRouteData(token);
       const routes = await getNotification();
       if (routes.length > 0) {
         const timestampedRoutes = routes.map((route: any) => ({
@@ -136,7 +124,6 @@ export default function NotificationScreen() {
     Geolocation.getCurrentPosition(
       position => {
         setUserLocation(position?.coords);
-        setLocation(position);
       },
       error => {
         console.log(error.code, error.message);
@@ -216,45 +203,6 @@ export default function NotificationScreen() {
     return Math.random().toString(36).substr(2, 9);
   };
 
-  const PopupModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showPopup}
-      onRequestClose={() => {
-        setShowPopup(false);
-      }}>
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>
-            Get a free ice cream on your 11th purchase!
-          </Text>
-          <Text style={styles.modalText}>Click Count: {clickCounts}</Text>
-          {customCode && (
-            <Text style={styles.modalText}>Your Code: {customCode}</Text>
-          )}
-          <TouchableOpacity
-            style={styles.buttonClose}
-            onPress={() => setShowPopup(false)}>
-            <Text style={styles.buttonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const DraggableIcon = () => (
-    <Draggable
-      x={-10}
-      y={50}
-      renderColor="red"
-      onShortPressRelease={() => setShowPopup(true)}
-      renderText="🍦"
-      isCircle
-      renderSize={44}
-    />
-  );
-
   const filterNotifications = (notifications: any[]) => {
     const now = new Date().getTime();
     const twelveHours = 12 * 60 * 60 * 1000;
@@ -267,20 +215,40 @@ export default function NotificationScreen() {
   };
 
   const renderItem = ({item}: any) => (
-    <View style={styles.notificationBox}>
+    <View
+      style={[
+        styles.notificationBox,
+        isTablet && styles.notificationBoxTablet,
+      ]}>
       {item.pickUpCords?.pickUpAddress &&
         item.DestinationCords?.dropAddress && (
           <>
-            <View style={styles.addressCard}>
+            <View
+              style={[
+                styles.addressCard,
+                isTablet && styles.addressCardTablet,
+              ]}>
               <Icon name="location-sharp" size={24} color="#1565C0" />
-              <Text style={styles.addressText}>
+              <Text
+                style={[
+                  styles.addressText,
+                  isTablet && styles.addressTextTablet,
+                ]}>
                 <Text style={{fontWeight: 'bold'}}>Pickup :</Text>{' '}
                 {item.pickUpCords.pickUpAddress}
               </Text>
             </View>
-            <View style={styles.addressCard}>
+            <View
+              style={[
+                styles.addressCard,
+                isTablet && styles.addressCardTablet,
+              ]}>
               <Icon name="location-sharp" size={24} color="#C62828" />
-              <Text style={styles.addressText}>
+              <Text
+                style={[
+                  styles.addressText,
+                  isTablet && styles.addressTextTablet,
+                ]}>
                 <Text style={{fontWeight: 'bold'}}>Drop :</Text>{' '}
                 {item.DestinationCords.dropAddress}
               </Text>
@@ -289,17 +257,24 @@ export default function NotificationScreen() {
         )}
 
       <View
-        style={{
-          backgroundColor: '#B4B4B4',
-          padding: 15,
-          width: '100%',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}>
-        <Text style={styles.notificationText}>
+        style={[
+          styles.notificationContent,
+          isTablet && styles.notificationContentTablet,
+        ]}>
+        <Text
+          style={[
+            styles.notificationText,
+            isTablet && styles.notificationTextTablet,
+          ]}>
           Whippy Bois is On Your Route Today!!!
         </Text>
-        <Text style={styles.notificationSubText}>Do you want something?</Text>
+        <Text
+          style={[
+            styles.notificationSubText,
+            isTablet && styles.notificationSubTextTablet,
+          ]}>
+          Do you want something?
+        </Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => handleYesPress(item.driverId)}
@@ -325,8 +300,6 @@ export default function NotificationScreen() {
           style={styles.list}
         />
       </View>
-      {/* <DraggableIcon />
-      <PopupModal /> */}
     </SafeAreaView>
   );
 }
@@ -354,11 +327,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginLeft: 3,
   },
+  notificationBoxTablet: {
+    padding: 20, // Increased padding for tablets
+  },
   addressCard: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
     padding: 13,
+  },
+  addressCardTablet: {
+    padding: 20, // Increased padding for tablets
   },
   addressText: {
     fontSize: 16,
@@ -366,15 +345,34 @@ const styles = StyleSheet.create({
     color: '#424242',
     marginRight: 30,
   },
+  addressTextTablet: {
+    fontSize: 20, // Larger font for tablets
+  },
+  notificationContent: {
+    backgroundColor: '#B4B4B4',
+    padding: 15,
+    width: '100%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  notificationContentTablet: {
+    padding: 25, // Increased padding for tablets
+  },
   notificationText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
   },
+  notificationTextTablet: {
+    fontSize: 22, // Larger font for tablets
+  },
   notificationSubText: {
     fontSize: 15,
     fontWeight: '400',
     color: '#000',
+  },
+  notificationSubTextTablet: {
+    fontSize: 19, // Larger font for tablets
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -398,41 +396,5 @@ const styles = StyleSheet.create({
   },
   list: {
     width: '100%',
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    height: 250,
-    width: '80%',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    fontWeight: '700',
-    color: '#000',
-    fontSize: 20,
-  },
-  buttonClose: {
-    backgroundColor: '#2196F3',
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
   },
 });
